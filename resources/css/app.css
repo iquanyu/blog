@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+[x-cloak] {
+    display: none;
+}
+
+:root {
+    --transition-duration: 200ms;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+    z-index: 1;
+}
+::view-transition-new(root) {
+    z-index: 999;
+}
+
+@supports (view-transition: inherit) {
+    .dark-mode-transition {
+        view-transition-name: root;
+    }
+}
+
+@supports not (view-transition: inherit) {
+    * {
+        transition: background-color var(--transition-duration) ease,
+                    border-color var(--transition-duration) ease,
+                    color var(--transition-duration) ease;
+    }
+}
