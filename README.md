@@ -7,60 +7,122 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
-## About Laravel
+## 关于本项目
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+这是一个使用 Laravel 10 + Inertia + Vue 3 构建的现代化博客系统。系统采用了最新的技术栈，提供了丰富的功能特性。
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 主要特性
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+#### 内容管理
+- 支持 Markdown 和富文本编辑器
+- 文章分类和标签管理
+- 文章评论和点赞功能
+- 文章版本控制
+- SEO 优化支持
 
-## Learning Laravel
+#### 用户系统
+- 基于角色的权限管理（RBAC）
+- 多用户支持
+- 个人资料管理
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+#### 界面设计
+- 响应式设计
+- 深色模式支持
+- 代码高亮显示
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### 技术栈
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+#### 后端
+- Laravel 10
+- MySQL
+- Redis (可选)
+- Laravel Sanctum
+- Spatie/Laravel-permission
 
-## Laravel Sponsors
+#### 前端
+- Vue 3
+- Inertia.js
+- Tailwind CSS
+- Headless UI
+- Vite
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 快速开始
 
-### Premium Partners
+### 系统要求
+- PHP >= 8.1
+- Node.js >= 16
+- MySQL >= 5.7
+- Composer
+- NPM 或 Yarn
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+### 安装步骤
 
-## Contributing
+1. 克隆项目并安装依赖
+```bash
+git clone <your-repo-url>
+cd blog
+composer install
+npm install
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+2. 环境配置
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-## Code of Conduct
+3. 数据库配置
+```bash
+# 在 .env 文件中配置数据库信息
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=your_database
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+4. 运行迁移和填充数据
+```bash
+php artisan migrate
+php artisan db:seed
+```
 
-## Security Vulnerabilities
+5. 启动服务
+```bash
+# 终端 1
+php artisan serve
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# 终端 2
+npm run dev
+```
+
+### 测试账号
+
+- 超级管理员
+  - Email: super-admin@example.com
+  - Password: password123
+
+- 管理员
+  - Email: admin@example.com
+  - Password: password123
+
+## 开发文档
+
+详细的开发文档请查看 [Wiki](your-wiki-url)
+
+## 贡献指南
+
+1. Fork 项目
+2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
+
+## 安全漏洞
+
+如果您发现任何安全漏洞，请发送邮件至 [your-email@example.com](mailto:your-email@example.com)
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+本项目基于 [MIT license](https://opensource.org/licenses/MIT) 开源。
