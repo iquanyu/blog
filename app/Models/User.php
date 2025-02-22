@@ -59,5 +59,29 @@ class User extends Authenticatable
      */
     protected $appends = [
         'profile_photo_url',
+        'is_admin',
     ];
+
+    public function getIsAdminAttribute()
+    {
+        return $this->hasRole(['admin', 'super-admin']);
+    }
+
+    /**
+     * 获取用户的文章
+     */
+    public function posts()
+    {
+        return $this->hasMany(Post::class, 'author_id');
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    public function likedPosts()
+    {
+        return $this->belongsToMany(Post::class, 'post_likes')->withTimestamps();
+    }
 }

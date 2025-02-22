@@ -103,9 +103,11 @@ class PostFactory extends Factory
             'excerpt' => $this->contents[0],
             'status' => $this->faker->randomElement(['draft', 'published']),
             'featured_image' => 'https://picsum.photos/seed/'.fake()->word.'/800/600',
-            'user_id' => User::factory(),
+            'author_id' => User::factory(),
             'category_id' => Category::factory(),
             'published_at' => $this->faker->dateTimeBetween('-1 year', 'now'),
+            'created_at' => $this->faker->dateTimeBetween('+6 months', '+1 year'),
+            'updated_at' => $this->faker->dateTimeBetween('+6 months', '+1 year'),
         ];
     }
 

@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import 'variables.css';
+
 [x-cloak] {
     display: none;
 }
@@ -35,4 +37,42 @@
                     border-color var(--transition-duration) ease,
                     color var(--transition-duration) ease;
     }
+}
+
+/* 使用变量的示例 */
+.btn-primary {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--color-primary-dark);
+}
+
+@layer components {
+    .btn-primary {
+        @apply bg-orange-600 text-white hover:bg-orange-500 focus:ring-orange-500;
+    }
+    
+    .btn-secondary {
+        @apply bg-white text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50;
+    }
+    
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+        @apply border-orange-500 ring-orange-500;
+    }
+    
+    .form-checkbox:checked, .form-radio:checked {
+        @apply bg-orange-600 border-orange-600;
+    }
+}
+
+/* 修改默认链接颜色 */
+a {
+    @apply text-orange-600 hover:text-orange-700;
+}
+
+/* 修改选中文本的颜色 */
+::selection {
+    @apply bg-orange-200 text-orange-900;
 }

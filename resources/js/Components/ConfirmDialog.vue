@@ -88,7 +88,7 @@ const handleConfirm = () => {
                             <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                                 <button
                                     type="button"
-                                    class="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-400 sm:ml-3 sm:w-auto"
+                                    class="inline-flex justify-center rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500"
                                     @click="handleConfirm"
                                 >
                                     {{ confirmText }}

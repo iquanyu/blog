@@ -70,7 +70,7 @@ class DatabaseSeeder extends Seeder
                 ->published()
                 ->create([
                     'category_id' => $category->id,
-                    'user_id' => $editor->id,
+                    'author_id' => $editor->id,
                 ])
                 ->each(function ($post) use ($tags) {
                     // 为每篇文章随机分配2-4个标签
@@ -82,26 +82,24 @@ class DatabaseSeeder extends Seeder
                 ->draft()
                 ->create([
                     'category_id' => $category->id,
-                    'user_id' => $creator->id,
+                    'author_id' => $creator->id,
                 ])
                 ->each(function ($post) use ($tags) {
                     // 为每篇文章随机分配2-4个标签
                     $post->tags()->attach($tags->random(rand(2, 4)));
                 });
         });
-
         // 创建一些没有分类的文章 (3篇)
-        Post::factory(3)
-            ->published()
-            ->create([
-                'category_id' => null,
-                'user_id' => $editor->id,
-            ])
-            ->each(function ($post) use ($tags) {
-                // 为每篇文章随机分配2-4个标签
-                $post->tags()->attach($tags->random(rand(2, 4)));
-            });
-
+        // Post::factory(3)
+        //     ->published()
+        //     ->create([
+        //         'category_id' => null,
+        //         'author_id' => $editor->id,
+        //     ])
+        //     ->each(function ($post) use ($tags) {
+        //         // 为每篇文章随机分配2-4个标签
+        //         $post->tags()->attach($tags->random(rand(2, 4)));
+        //     });
         // 最后创建评论
         $this->call([
             CommentSeeder::class,

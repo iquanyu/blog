@@ -7,6 +7,7 @@ use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvi
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use App\Models\Post;
 
 class RouteServiceProvider extends ServiceProvider
 {
@@ -24,6 +25,11 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // 添加自定义路由模型绑定，使用 slug 查找文章
+        Route::bind('post', function ($value) {
+            return Post::where('slug', $value)->firstOrFail();
+        });
+
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });

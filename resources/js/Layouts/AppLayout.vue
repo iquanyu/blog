@@ -221,11 +221,22 @@ const isMac = computed(() => {
                                     个人资料
                                 </DropdownLink>
                                 <DropdownLink 
-                                    v-if="user.can?.['create posts']" 
+                                    v-if="user.can?.['create posts'] || user.is_admin" 
                                     :href="route('admin.posts.index')"
                                     class="text-sm"
                                 >
                                     管理后台
+                                </DropdownLink>
+                                <DropdownLink 
+                                    v-if="user.is_admin" 
+                                    :href="route('admin.dashboard')"
+                                >
+                                    <template #icon>
+                                        <svg class="mr-2 h-5 w-5 text-gray-400 group-hover:text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
+                                        </svg>
+                                    </template>
+                                    后台管理
                                 </DropdownLink>
                                 <div class="border-t border-gray-100"></div>
                                 <form @submit.prevent="logout">

@@ -10,16 +10,21 @@ defineProps({
 </script>
 
 <template>
-    <div v-if="links.length > 3" class="flex flex-wrap -mb-1">
+    <div class="flex flex-wrap justify-center gap-1">
         <template v-for="(link, key) in links" :key="key">
-            <div v-if="link.url === null" 
-                class="mr-1 mb-1 px-4 py-3 text-sm leading-4 text-gray-400 border rounded"
-                v-html="link.label" 
+            <div
+                v-if="link.url === null"
+                class="px-4 py-2 text-sm text-gray-500 bg-white border border-gray-300 rounded-md cursor-not-allowed"
+                v-html="link.label"
             />
-            <Link v-else
+            <Link
+                v-else
                 :href="link.url"
-                class="mr-1 mb-1 px-4 py-3 text-sm leading-4 border rounded hover:bg-gray-100"
-                :class="{ 'bg-gray-800 text-white': link.active }"
+                class="px-4 py-2 text-sm border rounded-md hover:bg-gray-50"
+                :class="[
+                    link.active ? 'bg-orange-50 text-orange-600 border-orange-500' : '',
+                    'relative inline-flex items-center px-4 py-2 text-sm font-semibold border'
+                ]"
                 v-html="link.label"
             />
         </template>

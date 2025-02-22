@@ -1,12 +1,16 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { Head, useForm } from '@inertiajs/vue3'
+import { Head, useForm, usePage } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import { QuillEditor } from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
 import { Switch } from '@headlessui/vue'
 
 const props = defineProps({
+    post: {
+        type: Object,
+        required: true
+    },
     categories: {
         type: Array,
         required: true
@@ -14,17 +18,17 @@ const props = defineProps({
 })
 
 const form = useForm({
-    title: '',
-    slug: '',
-    content: '',
-    excerpt: '',
-    category_id: '',
-    status: 'draft',
-    published_at: null,
+    title: props.post.title,
+    slug: props.post.slug,
+    content: props.post.content,
+    excerpt: props.post.excerpt,
+    category_id: props.post.category?.id || '',
+    status: props.post.published_at ? 'published' : 'draft',
+    published_at: props.post.published_at,
     featured_image: null
 })
 
-const isPublished = ref(false)
+const isPublished = ref(!!props.post.published_at)
 
 // 编辑器配置
 const editorOptions = {
@@ -112,62 +116,53 @@ const generateSlug = (title) => {
 
 // 监听标题变化自动生成 slug
 watch(() => form.title, (value) => {
-    if (!form.slug || form.slug === generateSlug(form.title)) {
+    if (!form.slug || form.slug === generateSlug(props.post.title)) {
         form.slug = generateSlug(value)
     }
 })
 
 // 提交前禁用编辑器
 const submit = () => {
-    // 保存当前内容
     form.content = document.querySelector('.ql-editor').innerHTML
     
-    form.post(route('admin.posts.store'), {
+    form.put(route('admin.posts.update', props.post.slug), {
         preserveScroll: true,
         onSuccess: () => {
-            // 显示成功消息
-            alert('文章保存成功！')
-            // 可以选择重定向到列表页或编辑页
-            window.location.href = route('admin.posts.index')
+            // 不需要手动设置成功消息，因为后端已经通过 flash 设置了
+            // 但是如果想要自定义消息，可以这样设置：
+            // usePage().props.flash.success = '文章更新成功！'
         },
         onError: (errors) => {
-            // 显示详细错误消息
             console.error('表单错误：', errors)
-            let errorMessage = '保存失败：\n'
+            let errorMessage = '保存失败：'
             if (errors.error) {
                 errorMessage += errors.error
             } else {
                 Object.keys(errors).forEach(key => {
-                    errorMessage += `${key}: ${errors[key]}\n`
+                    errorMessage += `\n${key}: ${errors[key]}`
                 })
             }
-            alert(errorMessage)
-        },
-        onFinish: () => {
-            // 重新启用编辑器
-            const editor = document.querySelector('.ql-editor').__vue__.$parent.quill
-            editor.enable()
+            usePage().props.flash.error = errorMessage
         }
     })
 }
 
 const preview = () => {
-    // 实现预览功能
-    window.open(route('posts.preview'), '_blank')
+    window.open(route('posts.show', props.post.slug), '_blank')
 }
 </script>
 
 <template>
     <AdminLayout>
-        <Head title="新建文章" />
+        <Head :title="`编辑文章 - ${post.title}`" />
 
         <form @submit.prevent="submit">
             <!-- 固定的操作栏 -->
             <div class="sticky top-16 z-30 bg-white border-b border-gray-200 px-4 py-4 sm:px-6 lg:px-8">
                 <div class="max-w-7xl mx-auto flex items-center justify-between">
                     <div>
-                        <h2 class="text-base font-semibold leading-7 text-gray-900">新建文章</h2>
-                        <p class="mt-1 text-sm leading-6 text-gray-600">创建一篇新的博客文章，填写完成后可以选择立即发布或保存为草稿。</p>
+                        <h2 class="text-base font-semibold leading-7 text-gray-900">编辑文章</h2>
+                        <p class="mt-1 text-sm leading-6 text-gray-600">编辑现有的博客文章，可以选择立即发布或保存为草稿。</p>
                     </div>
                     <div class="flex items-center gap-x-4">
                         <button
@@ -318,12 +313,6 @@ const preview = () => {
                 </div>
             </div>
         </form>
-
-        <!-- 添加全局错误提示 -->
-        <div v-if="form.errors.error" class="fixed top-20 right-4 z-50 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            <strong class="font-bold">错误！</strong>
-            <span class="block sm:inline">{{ form.errors.error }}</span>
-        </div>
     </AdminLayout>
 </template>
 

@@ -20,3 +20,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::get('/search', [SearchController::class, 'search'])->name('api.search');
+Route::get('/global-search', [SearchController::class, 'globalSearch'])->name('api.global-search');

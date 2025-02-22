@@ -18,18 +18,31 @@ class Post extends Model
         'excerpt',
         'featured_image',
         'status',
-        'published_at'
+        'published_at',
+        'category_id',
+        'author_id',
+        'editor_type'
+    ];
+
+    protected $attributes = [
+        'editor_type' => 'markdown'
     ];
 
     protected $casts = [
         'published_at' => 'datetime',
     ];
 
+    /**
+     * 获取文章作者
+     */
     public function author()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'author_id');
     }
 
+    /**
+     * 获取文章分类
+     */
     public function category()
     {
         return $this->belongsTo(Category::class);
