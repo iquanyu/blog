@@ -1,11 +1,7 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import AuthenticationCard from '@/Components/AuthenticationCard.vue';
-import AuthenticationCardLogo from '@/Components/AuthenticationCardLogo.vue';
-import Checkbox from '@/Components/Checkbox.vue';
+import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 
 const form = useForm({
@@ -24,89 +20,152 @@ const submit = () => {
 </script>
 
 <template>
-    <Head title="Register" />
+    <Head title="注册" />
 
-    <AuthenticationCard>
-        <template #logo>
-            <AuthenticationCardLogo />
-        </template>
+    <div class="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
+        <div class="sm:mx-auto sm:w-full sm:max-w-md">
+            <Link href="/" class="flex justify-center">
+                <ApplicationLogo class="h-10 w-auto" />
+            </Link>
+            <h2 class="mt-6 text-center text-2xl font-medium tracking-tight text-gray-900 dark:text-white">
+                创建您的账号
+            </h2>
+        </div>
 
-        <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="name" value="Name" />
-                <TextInput
-                    id="name"
-                    v-model="form.name"
-                    type="text"
-                    class="mt-1 block w-full"
-                    required
-                    autofocus
-                    autocomplete="name"
-                />
-                <InputError class="mt-2" :message="form.errors.name" />
-            </div>
-
-            <div class="mt-4">
-                <InputLabel for="email" value="Email" />
-                <TextInput
-                    id="email"
-                    v-model="form.email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    required
-                    autocomplete="username"
-                />
-                <InputError class="mt-2" :message="form.errors.email" />
-            </div>
-
-            <div class="mt-4">
-                <InputLabel for="password" value="Password" />
-                <TextInput
-                    id="password"
-                    v-model="form.password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    required
-                    autocomplete="new-password"
-                />
-                <InputError class="mt-2" :message="form.errors.password" />
-            </div>
-
-            <div class="mt-4">
-                <InputLabel for="password_confirmation" value="Confirm Password" />
-                <TextInput
-                    id="password_confirmation"
-                    v-model="form.password_confirmation"
-                    type="password"
-                    class="mt-1 block w-full"
-                    required
-                    autocomplete="new-password"
-                />
-                <InputError class="mt-2" :message="form.errors.password_confirmation" />
-            </div>
-
-            <div v-if="$page.props.jetstream.hasTermsAndPrivacyPolicyFeature" class="mt-4">
-                <InputLabel for="terms">
-                    <div class="flex items-center">
-                        <Checkbox id="terms" v-model:checked="form.terms" name="terms" required />
-
-                        <div class="ms-2">
-                            I agree to the <a target="_blank" :href="route('terms.show')" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Terms of Service</a> and <a target="_blank" :href="route('policy.show')" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Privacy Policy</a>
+        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+            <div class="px-4 py-8 sm:rounded-lg sm:px-10">
+                <form @submit.prevent="submit" class="space-y-6">
+                    <!-- Name -->
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            用户名
+                        </label>
+                        <div class="mt-1">
+                            <TextInput
+                                id="name"
+                                v-model="form.name"
+                                type="text"
+                                autocomplete="name"
+                                required
+                                class="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm dark:bg-gray-800 dark:text-white"
+                            />
+                            <InputError :message="form.errors.name" class="mt-2" />
                         </div>
                     </div>
-                    <InputError class="mt-2" :message="form.errors.terms" />
-                </InputLabel>
-            </div>
 
-            <div class="flex items-center justify-end mt-4">
-                <Link :href="route('login')" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Already registered?
-                </Link>
+                    <!-- Email -->
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            电子邮箱
+                        </label>
+                        <div class="mt-1">
+                            <TextInput
+                                id="email"
+                                v-model="form.email"
+                                type="email"
+                                autocomplete="email"
+                                required
+                                class="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm dark:bg-gray-800 dark:text-white"
+                            />
+                            <InputError :message="form.errors.email" class="mt-2" />
+                        </div>
+                    </div>
 
-                <PrimaryButton class="ms-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
-                    Register
-                </PrimaryButton>
+                    <!-- Password -->
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            密码
+                        </label>
+                        <div class="mt-1">
+                            <TextInput
+                                id="password"
+                                v-model="form.password"
+                                type="password"
+                                autocomplete="new-password"
+                                required
+                                class="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm dark:bg-gray-800 dark:text-white"
+                            />
+                            <InputError :message="form.errors.password" class="mt-2" />
+                        </div>
+                    </div>
+
+                    <!-- Password Confirmation -->
+                    <div>
+                        <label for="password_confirmation" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            确认密码
+                        </label>
+                        <div class="mt-1">
+                            <TextInput
+                                id="password_confirmation"
+                                v-model="form.password_confirmation"
+                                type="password"
+                                autocomplete="new-password"
+                                required
+                                class="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm dark:bg-gray-800 dark:text-white"
+                            />
+                            <InputError :message="form.errors.password_confirmation" class="mt-2" />
+                        </div>
+                    </div>
+
+                    <!-- Terms -->
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input
+                                id="terms"
+                                v-model="form.terms"
+                                name="terms"
+                                type="checkbox"
+                                class="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500 dark:border-gray-600 dark:bg-gray-700"
+                            />
+                        </div>
+                        <div class="ml-3">
+                            <label for="terms" class="text-sm text-gray-600 dark:text-gray-400">
+                                我同意
+                                <a href="#" class="font-medium text-orange-600 hover:text-orange-500 dark:text-orange-400">
+                                    服务条款
+                                </a>
+                                和
+                                <a href="#" class="font-medium text-orange-600 hover:text-orange-500 dark:text-orange-400">
+                                    隐私政策
+                                </a>
+                            </label>
+                            <InputError :message="form.errors.terms" class="mt-2" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <button
+                            type="submit"
+                            :disabled="form.processing"
+                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed dark:focus:ring-offset-gray-900"
+                        >
+                            {{ form.processing ? '注册中...' : '注册' }}
+                        </button>
+                    </div>
+                </form>
+
+                <div class="mt-6">
+                    <div class="relative">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-gray-300 dark:border-gray-600" />
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-2 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">
+                                或者
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 text-center text-sm">
+                        <Link
+                            :href="route('login')"
+                            class="font-medium text-orange-600 hover:text-orange-500 dark:text-orange-400"
+                        >
+                            使用已有账号登录
+                        </Link>
+                    </div>
+                </div>
             </div>
-        </form>
-    </AuthenticationCard>
+        </div>
+    </div>
 </template>

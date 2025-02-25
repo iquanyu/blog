@@ -31,6 +31,11 @@ const paginationData = computed(() => {
         total: 0
     };
 
+    // 确保 links 存在且是数组
+    if (!Array.isArray(props.links) || props.links.length === 0) {
+        return data;
+    }
+
     // 从链接数组中提取分页信息
     props.links.forEach(link => {
         if (link.active) {
@@ -71,7 +76,7 @@ const shouldShowPage = computed(() => (pageNumber) => {
 </script>
 
 <template>
-    <div class="flex flex-col items-center space-y-4">
+    <div v-if="links && links.length > 0" class="flex flex-col items-center space-y-4">
         <!-- 分页链接 -->
         <div class="flex flex-wrap justify-center gap-1">
             <template v-for="(link, key) in links" :key="key">

@@ -1,163 +1,344 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3'
-import { ref } from 'vue'
+import { Head } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
+import StatCard from '@/Components/StatCard.vue'
+import { ref, onMounted } from 'vue'
+import { 
+    DocumentTextIcon, 
+    UserGroupIcon, 
+    ChatBubbleLeftEllipsisIcon,
+    TagIcon,
+    FolderIcon,
+    EyeIcon,
+    HeartIcon,
+    ChartBarIcon,
+    ArrowTrendingUpIcon,
+    ArrowTrendingDownIcon
+} from '@heroicons/vue/24/outline'
 
 const props = defineProps({
     stats: {
         type: Object,
         required: true
+    },
+    trend: {
+        type: Array,
+        required: true
+    },
+    categoryStats: {
+        type: Array,
+        required: true
+    },
+    recentPosts: {
+        type: Array,
+        required: true
+    },
+    popularPosts: {
+        type: Array,
+        required: true
+    },
+    activeUsers: {
+        type: Array,
+        required: true
     }
 })
 
-// 时间范围选项
-const timeRanges = [
-    { name: '最近一周', value: 'week' },
-    { name: '最近两周', value: 'two_weeks' },
-    { name: '最近一月', value: 'month' },
-    { name: '最近一季', value: 'quarter' }
-]
-const selectedRange = ref('week')
-
-// 统计卡片配置 - 完全匹配 Catalyst 的数据
-const statCards = [
-    {
-        name: '总收入',
-        value: '$2.6M',
-        change: '+4.5%',
-        changeText: 'from last week',
-        trend: 'up'
-    },
-    {
-        name: '平均订单金额',
-        value: '$455',
-        change: '-0.5%',
-        changeText: 'from last week',
-        trend: 'down'
-    },
-    {
-        name: '售出票数',
-        value: '5,888',
-        change: '+4.5%',
-        changeText: 'from last week',
-        trend: 'up'
-    },
-    {
-        name: '页面浏览量',
-        value: '823,067',
-        change: '+21.2%',
-        changeText: 'from last week',
-        trend: 'up'
+// 计算趋势变化
+const calculateTrend = (current, previous) => {
+    if (!previous) return { value: 0, isUp: true }
+    const change = ((current - previous) / previous) * 100
+    return {
+        value: Math.abs(change).toFixed(1),
+        isUp: change > 0
     }
-]
+}
 
-// 最近订单列表 - 完全匹配 Catalyst 的数据结构
-const recentOrders = [
-    {
-        number: '3000',
-        date: 'May 9, 2024',
-        customer: 'Leslie Alexander',
-        event: {
-            name: 'Bear Hug: Live in Concert',
-            image: '/events/bear-hug-thumb.jpg'
-        },
-        amount: 'US$80.00'
-    },
-    // ... 其他订单数据
-]
+// 获取今日数据趋势
+const todayTrends = ref({
+    posts: calculateTrend(props.stats.total_posts, props.stats.total_posts - props.trend[0]?.count || 0),
+    views: calculateTrend(props.stats.total_views || 0, (props.stats.total_views || 0) - (props.trend[0]?.views || 0)),
+    comments: calculateTrend(props.stats.total_comments, props.stats.total_comments - (props.trend[0]?.comments || 0))
+})
+
+// 图表相关
+let chart = null
+
+onMounted(() => {
+    const ctx = document.getElementById('trendsChart')
+    if (window.Chart && ctx) {
+        chart = new window.Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: props.trend.map(t => t.date).reverse(),
+                datasets: [{
+                    label: '文章数',
+                    data: props.trend.map(t => t.count).reverse(),
+                    borderColor: '#f97316',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        })
+    }
+})
 </script>
 
 <template>
     <AdminLayout>
-        <Head title="Dashboard" />
-        
-        <!-- 移除额外的 padding -->
-        <div>
-            <!-- 页面标题 -->
-            <h1 class="text-2xl font-semibold leading-6 text-gray-900">
-                Good afternoon, {{ props.stats.user_name }}
-            </h1>
+        <Head title="仪表盘" />
 
-            <!-- 概览部分 -->
-            <div class="mt-8">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-base font-semibold leading-7 text-gray-900">Overview</h2>
-                    
-                    <!-- 时间范围选择器 - 匹配 Catalyst 的样式 -->
-                    <div class="flex gap-x-2">
-                        <button
-                            v-for="range in timeRanges"
-                            :key="range.value"
-                            @click="selectedRange = range.value"
-                            :class="[
-                                'px-3 py-2 text-sm font-semibold rounded-lg',
-                                selectedRange === range.value
-                                    ? 'bg-gray-900 text-white'
-                                    : 'text-gray-700 hover:bg-gray-50'
-                            ]"
-                        >
-                            {{ range.name }}
-                        </button>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <!-- 欢迎信息 -->
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                    欢迎回来，{{ stats.user_name }}
+                </h1>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    这里是您的博客数据概览
+                </p>
+            </div>
+
+            <!-- 统计卡片 -->
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                <StatCard 
+                    title="文章总数" 
+                    :value="stats.total_posts" 
+                    :icon="DocumentTextIcon"
+                    icon-color="text-blue-500"
+                >
+                    <template #trend>
+                        <div class="mt-2 flex items-center text-sm">
+                            <component
+                                :is="todayTrends.posts.isUp ? ArrowTrendingUpIcon : ArrowTrendingDownIcon"
+                                class="h-4 w-4 mr-1"
+                                :class="todayTrends.posts.isUp ? 'text-green-500' : 'text-red-500'"
+                            />
+                            <span :class="todayTrends.posts.isUp ? 'text-green-500' : 'text-red-500'">
+                                {{ todayTrends.posts.value }}%
+                            </span>
+                            <span class="ml-1 text-gray-500">较上期</span>
+                        </div>
+                    </template>
+                </StatCard>
+                
+                <StatCard 
+                    title="已发布" 
+                    :value="stats.published_posts" 
+                    :icon="DocumentTextIcon"
+                    icon-color="text-green-500"
+                />
+                
+                <StatCard 
+                    title="草稿" 
+                    :value="stats.draft_posts" 
+                    :icon="DocumentTextIcon"
+                    icon-color="text-yellow-500"
+                />
+                
+                <StatCard 
+                    title="用户数" 
+                    :value="stats.total_users" 
+                    :icon="UserGroupIcon"
+                    icon-color="text-purple-500"
+                />
+                
+                <StatCard 
+                    title="评论数" 
+                    :value="stats.total_comments" 
+                    :icon="ChatBubbleLeftEllipsisIcon"
+                    icon-color="text-pink-500"
+                >
+                    <template #trend>
+                        <div class="mt-2 flex items-center text-sm">
+                            <component
+                                :is="todayTrends.comments.isUp ? ArrowTrendingUpIcon : ArrowTrendingDownIcon"
+                                class="h-4 w-4 mr-1"
+                                :class="todayTrends.comments.isUp ? 'text-green-500' : 'text-red-500'"
+                            />
+                            <span :class="todayTrends.comments.isUp ? 'text-green-500' : 'text-red-500'">
+                                {{ todayTrends.comments.value }}%
+                            </span>
+                            <span class="ml-1 text-gray-500">较上期</span>
+                        </div>
+                    </template>
+                </StatCard>
+                
+                <StatCard 
+                    title="分类数" 
+                    :value="stats.total_categories" 
+                    :icon="FolderIcon"
+                    icon-color="text-orange-500"
+                />
+                
+                <StatCard 
+                    title="标签数" 
+                    :value="stats.total_tags" 
+                    :icon="TagIcon"
+                    icon-color="text-indigo-500"
+                />
+                
+                <StatCard 
+                    title="总浏览量" 
+                    :value="stats.total_views || 0" 
+                    :icon="EyeIcon"
+                    icon-color="text-cyan-500"
+                >
+                    <template #trend>
+                        <div class="mt-2 flex items-center text-sm">
+                            <component
+                                :is="todayTrends.views.isUp ? ArrowTrendingUpIcon : ArrowTrendingDownIcon"
+                                class="h-4 w-4 mr-1"
+                                :class="todayTrends.views.isUp ? 'text-green-500' : 'text-red-500'"
+                            />
+                            <span :class="todayTrends.views.isUp ? 'text-green-500' : 'text-red-500'">
+                                {{ todayTrends.views.value }}%
+                            </span>
+                            <span class="ml-1 text-gray-500">较上期</span>
+                        </div>
+                    </template>
+                </StatCard>
+            </div>
+
+            <!-- 趋势图表 -->
+            <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white flex items-center">
+                            <ChartBarIcon class="h-5 w-5 mr-2 text-gray-500" />
+                            最近30天文章发布趋势
+                        </h3>
+                    </div>
+                    <div class="h-64">
+                        <canvas id="trendsChart"></canvas>
                     </div>
                 </div>
 
-                <!-- 统计卡片 - 完全匹配 Catalyst 的布局和样式 -->
-                <div class="mt-6 grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
-                    <div
-                        v-for="card in statCards"
-                        :key="card.name"
-                        class="rounded-xl bg-gray-50 p-6"
-                    >
-                        <h3 class="text-sm font-medium leading-6 text-gray-500">
-                            {{ card.name }}
+                <!-- 分类统计 -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+                    <div class="p-6">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white flex items-center mb-4">
+                            <FolderIcon class="h-5 w-5 mr-2 text-gray-500" />
+                            文章分类统计
                         </h3>
-                        <div class="mt-2 flex items-baseline gap-x-2">
-                            <span class="text-3xl font-semibold tracking-tight text-gray-900">{{ card.value }}</span>
-                            <span :class="[
-                                card.trend === 'up' ? 'text-emerald-700 bg-emerald-50' : 'text-rose-700 bg-rose-50',
-                                'inline-flex items-baseline rounded-full px-2 py-0.5 text-sm font-medium'
-                            ]">
-                                {{ card.change }}
-                            </span>
+                        <div class="space-y-4">
+                            <div
+                                v-for="category in categoryStats"
+                                :key="category.name"
+                                class="flex items-center"
+                            >
+                                <span class="flex-1 text-sm text-gray-600 dark:text-gray-400">
+                                    {{ category.name }}
+                                </span>
+                                <div class="w-48 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                    <div
+                                        class="h-full bg-orange-500 dark:bg-orange-600 rounded-full"
+                                        :style="{ width: `${(category.count / Math.max(...categoryStats.map(c => c.count))) * 100}%` }"
+                                    ></div>
+                                </div>
+                                <span class="ml-3 text-sm font-medium text-gray-900 dark:text-white">
+                                    {{ category.count }}
+                                </span>
+                            </div>
                         </div>
-                        <p class="mt-1 text-sm text-gray-500">{{ card.changeText }}</p>
                     </div>
                 </div>
             </div>
 
-            <!-- 最近订单列表 - 完全匹配 Catalyst 的表格样式 -->
-            <div class="mt-16">
-                <h2 class="text-base font-semibold leading-7 text-gray-900">Recent orders</h2>
-                <div class="mt-6 overflow-hidden rounded-xl border border-gray-200">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Order number</th>
-                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Purchase date</th>
-                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Customer</th>
-                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Event</th>
-                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white">
-                            <tr v-for="order in recentOrders" :key="order.number">
-                                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                    <Link :href="`/orders/${order.number}`" class="text-indigo-600 hover:text-indigo-900">
-                                        {{ order.number }}
-                                    </Link>
-                                </td>
-                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ order.date }}</td>
-                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ order.customer }}</td>
-                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                    <div class="flex items-center gap-x-3">
-                                        <img :src="order.event.image" alt="" class="h-8 w-8 rounded-full bg-gray-50">
-                                        {{ order.event.name }}
+            <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- 最近文章 -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+                    <div class="p-6">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white flex items-center mb-4">
+                            <DocumentTextIcon class="h-5 w-5 mr-2 text-gray-500" />
+                            最近文章
+                        </h3>
+                        <div class="space-y-4">
+                            <div
+                                v-for="post in recentPosts"
+                                :key="post.id"
+                                class="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+                            >
+                                <div class="flex-1">
+                                    <h4 class="text-sm font-medium text-gray-900 dark:text-white">
+                                        {{ post.title }}
+                                    </h4>
+                                    <div class="mt-1 flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
+                                        <span>{{ post.author }}</span>
+                                        <span>&middot;</span>
+                                        <span>{{ post.category || '未分类' }}</span>
+                                        <span>&middot;</span>
+                                        <span>{{ post.published_at || '未发布' }}</span>
                                     </div>
-                                </td>
-                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ order.amount }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                </div>
+                                <span
+                                    :class="[
+                                        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+                                        post.status === 'published' 
+                                            ? 'bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400'
+                                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800/20 dark:text-yellow-400'
+                                    ]"
+                                >
+                                    {{ post.status === 'published' ? '已发布' : '草稿' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 热门文章 -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+                    <div class="p-6">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white flex items-center mb-4">
+                            <HeartIcon class="h-5 w-5 mr-2 text-gray-500" />
+                            热门文章
+                        </h3>
+                        <div class="space-y-4">
+                            <div
+                                v-for="(post, index) in popularPosts"
+                                :key="post.id"
+                                class="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+                            >
+                                <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full" :class="{
+                                    'bg-yellow-100 text-yellow-800 dark:bg-yellow-800/20 dark:text-yellow-400': index === 0,
+                                    'bg-gray-100 text-gray-800 dark:bg-gray-800/20 dark:text-gray-400': index > 0
+                                }">
+                                    {{ index + 1 }}
+                                </div>
+                                <div class="ml-3 flex-1">
+                                    <h4 class="text-sm font-medium text-gray-900 dark:text-white">
+                                        {{ post.title }}
+                                    </h4>
+                                    <div class="mt-1 flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
+                                        <span class="flex items-center">
+                                            <EyeIcon class="h-4 w-4 mr-1" />
+                                            {{ post.views }}
+                                        </span>
+                                        <span>&middot;</span>
+                                        <span class="flex items-center">
+                                            <HeartIcon class="h-4 w-4 mr-1" />
+                                            {{ post.likes }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

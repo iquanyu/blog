@@ -9,37 +9,49 @@ import { MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
 const page = usePage()
 const user = computed(() => page.props.auth.user)
 
-// 导航菜单配置 - 使用实际路由
+// 获取当前路由名称
+const currentRoute = computed(() => route().current())
+
+// 检查路由是否激活
+const isRouteActive = (routeName) => {
+    if (!currentRoute.value) return false
+    if (typeof routeName === 'string') {
+        return currentRoute.value === routeName
+    }
+    return routeName.some(name => currentRoute.value.startsWith(name))
+}
+
+// 导航菜单配置
 const navigation = [
     {
         name: '仪表盘',
         href: route('admin.dashboard'),
         icon: 'M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25',
-        current: route().current('admin.dashboard')
+        matchRoutes: ['admin.dashboard']
     },
     {
         name: '文章管理',
         href: route('admin.posts.index'),
         icon: 'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z',
-        current: route().current('admin.posts.*')
+        matchRoutes: ['admin.posts.']
     },
     {
         name: '分类管理',
         href: route('admin.categories.index'),
         icon: 'M2.25 7.125C2.25 6.504 2.754 6 3.375 6h6c.621 0 1.125.504 1.125 1.125v3.75c0 .621-.504 1.125-1.125 1.125h-6a1.125 1.125 0 01-1.125-1.125v-3.75zM14.25 8.625c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v8.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 01-1.125-1.125v-8.25zM3.75 16.125c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 01-1.125-1.125v-2.25z',
-        current: route().current('admin.categories.*')
+        matchRoutes: ['admin.categories.']
     },
     {
         name: '标签管理',
         href: route('admin.tags.index'),
         icon: 'M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z',
-        current: route().current('admin.tags.*')
+        matchRoutes: ['admin.tags.']
     },
     {
         name: '用户管理',
         href: route('admin.users.index'),
         icon: 'M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z',
-        current: route().current('admin.users.*')
+        matchRoutes: ['admin.users.']
     }
 ]
 
@@ -110,88 +122,64 @@ defineExpose({ showNotification })
     <div class="relative h-full w-full">
         <!-- 侧边栏 -->
         <div class="fixed inset-y-0 z-50 flex w-72 flex-col">
-            <div class="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-[#f9fafb]">
+            <div class="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-[#f9fafb] px-6">
                 <!-- Logo -->
-                <div class="flex h-16 shrink-0 items-center px-6">
+                <div class="flex h-16 shrink-0 items-center">
                     <Link :href="route('home')" class="text-xl font-semibold text-gray-900">
                         {{ page.props.app.name }}
                     </Link>
                 </div>
+
+                <!-- 主导航 -->
                 <nav class="flex flex-1 flex-col">
-                    <ul role="list" class="flex flex-1 flex-col gap-y-7">
-                        <li>
-                            <ul role="list" class="space-y-1 px-4">
-                                <li v-for="item in navigation" :key="item.name">
-                                    <Link
-                                        :href="item.href"
-                                        :class="[
-                                            item.current
-                                                ? 'bg-white text-orange-600'
-                                                : 'text-gray-700 hover:text-orange-600 hover:bg-white',
-                                            'group flex gap-x-3 rounded-md px-2 py-1.5 text-sm leading-6 font-semibold'
-                                        ]"
-                                    >
-                                        <svg 
-                                            class="h-6 w-6 shrink-0" 
-                                            :class="item.current ? 'text-orange-600' : 'text-gray-400 group-hover:text-orange-600'"
-                                            fill="none" 
-                                            viewBox="0 0 24 24" 
-                                            stroke-width="1.5" 
-                                            stroke="currentColor" 
-                                        >
-                                            <path stroke-linecap="round" stroke-linejoin="round" :d="item.icon" />
-                                        </svg>
-                                        {{ item.name }}
-                                    </Link>
-                                </li>
-                            </ul>
-                        </li>
-                        <li>
-                            <div class="text-xs font-semibold leading-6 text-gray-400 px-6">Your teams</div>
-                            <ul role="list" class="mt-2 space-y-1 px-4">
-                                <li v-for="team in teams" :key="team.name">
-                                    <a
-                                        :href="team.href"
-                                        :class="[
-                                            team.current ? 'bg-white text-orange-600' : 'text-gray-700 hover:text-orange-600 hover:bg-white',
-                                            'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
-                                        ]"
-                                    >
-                                        <span
-                                            :class="[
-                                                team.current ? 'text-orange-600 border-orange-600' : 'text-gray-400 border-gray-200 group-hover:border-orange-600 group-hover:text-orange-600',
-                                                'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white'
-                                            ]"
-                                        >
-                                            {{ team.initial }}
-                                        </span>
-                                        <span class="truncate">{{ team.name }}</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li class="-mx-0 mt-auto">
+                    <ul role="list" class="-mx-2 space-y-1">
+                        <li v-for="item in navigation" :key="item.name">
                             <Link
-                                :href="route('profile.show')"
-                                class="flex items-center gap-x-4 px-6 py-3 text-sm font-semibold leading-6 text-gray-900 hover:bg-gray-50"
+                                :href="item.href"
+                                :class="[
+                                    isRouteActive(item.matchRoutes)
+                                        ? 'bg-white text-orange-600'
+                                        : 'text-gray-700 hover:text-orange-600 hover:bg-white',
+                                    'group flex gap-x-3 rounded-md px-3 py-2 text-sm leading-6 font-semibold transition-colors duration-200'
+                                ]"
                             >
-                                <img
-                                    v-if="user.profile_photo_url"
-                                    :src="user.profile_photo_url"
-                                    :alt="user.name"
-                                    class="h-8 w-8 rounded-full bg-gray-50"
+                                <svg 
+                                    class="h-6 w-6 shrink-0 transition-colors duration-200" 
+                                    :class="isRouteActive(item.matchRoutes) ? 'text-orange-600' : 'text-gray-400 group-hover:text-orange-600'"
+                                    fill="none" 
+                                    viewBox="0 0 24 24" 
+                                    stroke-width="1.5" 
+                                    stroke="currentColor" 
                                 >
-                                <span v-else class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-500">
-                                    <span class="text-sm font-medium leading-none text-white">
-                                        {{ user.name.charAt(0) }}
-                                    </span>
-                                </span>
-                                <span class="sr-only">Your profile</span>
-                                <span aria-hidden="true">{{ user.name }}</span>
+                                    <path stroke-linecap="round" stroke-linejoin="round" :d="item.icon" />
+                                </svg>
+                                {{ item.name }}
                             </Link>
                         </li>
                     </ul>
                 </nav>
+
+                <!-- 用户信息 -->
+                <div class="mt-auto -mx-2">
+                    <Link
+                        :href="route('profile.show')"
+                        class="flex items-center gap-x-4 px-3 py-3 text-sm font-semibold leading-6 text-gray-900 hover:bg-gray-50 rounded-md"
+                    >
+                        <img
+                            v-if="user.profile_photo_url"
+                            :src="user.profile_photo_url"
+                            :alt="user.name"
+                            class="h-8 w-8 rounded-full bg-gray-50"
+                        >
+                        <span v-else class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-500">
+                            <span class="text-sm font-medium leading-none text-white">
+                                {{ user.name.charAt(0) }}
+                            </span>
+                        </span>
+                        <span class="sr-only">Your profile</span>
+                        <span aria-hidden="true">{{ user.name }}</span>
+                    </Link>
+                </div>
             </div>
         </div>
 
@@ -288,9 +276,9 @@ defineExpose({ showNotification })
                 </div>
             </div>
 
-            <!-- 主要内容区域 -->
-            <main class="py-10">
-                <div class="px-4 sm:px-6 lg:px-64">
+            <!-- 页面内容 -->
+            <main class="py-6">
+                <div class="px-4 sm:px-6 lg:px-8">
                     <slot />
                 </div>
             </main>
