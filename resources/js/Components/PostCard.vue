@@ -1,71 +1,63 @@
 <script setup>
 import { Link } from '@inertiajs/vue3'
+import { ClockIcon, EyeIcon } from '@heroicons/vue/24/outline'
+
+// 添加日期格式化函数
+const formatDate = (dateString) => {
+    if (!dateString) return ''
+    return new Date(dateString).toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    })
+}
 
 defineProps({
     post: {
         type: Object,
         required: true
+    },
+    showImage: {
+        type: Boolean,
+        default: false
     }
 })
 </script>
 
 <template>
-    <article class="group relative flex flex-col">
-        <!-- 特色图片 -->
-        <div class="relative h-48 w-full overflow-hidden rounded-lg">
-            <img 
-                v-if="post.featured_image"
-                :src="post.featured_image" 
-                :alt="post.title"
-                class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-            >
-            <div v-else class="h-full w-full bg-gray-100 dark:bg-gray-800"></div>
-        </div>
-
-        <!-- 文章信息 -->
-        <div class="flex flex-1 flex-col justify-between">
-            <div class="relative mt-4">
-                <h3 class="text-lg font-semibold leading-6">
-                    <Link 
-                        :href="route('posts.show', post.slug)"
-                        class="text-gray-900 hover:text-gray-600 dark:text-white dark:hover:text-gray-300"
-                    >
-                        {{ post.title }}
+    <article class="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700/50 shadow-sm hover:shadow-md hover:border-gray-200 dark:hover:border-gray-700 transition-all duration-300">
+        <Link :href="route('posts.show', post.slug)" class="block">
+            <div v-if="post.featured_image && showImage" class="aspect-w-16 aspect-h-9">
+                <img :src="post.featured_image" :alt="post.title" class="object-cover w-full h-full" />
+            </div>
+            <div class="p-4">
+                <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2">
+                    <Link :href="route('categories.show', post.category.slug)" 
+                        class="bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-full hover:bg-orange-100 dark:hover:bg-orange-900/50 border border-orange-100 dark:border-orange-500/20">
+                        {{ post.category.name }}
                     </Link>
-                </h3>
-                <p class="mt-3 text-sm text-gray-600 line-clamp-2 dark:text-gray-400">
+                    <div class="flex items-center">
+                        <ClockIcon class="w-4 h-4 mr-1" />
+                        <time :datetime="post.published_at">{{ formatDate(post.published_at) }}</time>
+                    </div>
+                </div>
+                <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2 hover:text-orange-500 dark:hover:text-orange-400">
+                    {{ post.title }}
+                </h2>
+                <p v-if="post.excerpt" class="text-xs text-gray-500 dark:text-gray-400 mb-3 line-clamp-2">
                     {{ post.excerpt }}
                 </p>
-            </div>
-            <div class="mt-4">
-                <!-- 标签 -->
-                <div v-if="post.tags?.length" class="flex flex-wrap gap-2 mb-4">
-                    <Link
-                        v-for="tag in post.tags"
-                        :key="tag.id"
-                        :href="route('tags.show', tag.slug)"
-                        class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-                    >
-                        {{ tag.name }}
-                    </Link>
-                </div>
-                <!-- 元信息 -->
-                <div class="flex items-center gap-x-3 text-xs text-gray-500 dark:text-gray-400">
-                    <div class="flex items-center gap-x-2">
-                        <img 
-                            v-if="post.author?.profile_photo_url" 
-                            :src="post.author.profile_photo_url" 
-                            :alt="post.author.name"
-                            class="h-6 w-6 rounded-full bg-gray-50"
-                        >
-                        <span>{{ post.author?.name }}</span>
+                <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                    <div class="flex items-center gap-2">
+                        <img :src="post.author.profile_photo_url" :alt="post.author.name" class="w-5 h-5 rounded-full ring-1 ring-gray-100 dark:ring-gray-700" />
+                        {{ post.author.name }}
                     </div>
-                    <span aria-hidden="true">&middot;</span>
-                    <time :datetime="post.published_at">
-                        {{ new Date(post.published_at).toLocaleDateString('zh-CN') }}
-                    </time>
+                    <div class="flex items-center gap-1">
+                        <EyeIcon class="w-4 h-4" />
+                        {{ post.views || 0 }}
+                    </div>
                 </div>
             </div>
-        </div>
+        </Link>
     </article>
 </template> 

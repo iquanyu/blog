@@ -10,6 +10,8 @@ use Illuminate\Support\Str;
 use App\Models\Category;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Models\User;
+use App\Models\Tag;
 
 class PostController extends Controller
 {
@@ -28,78 +30,133 @@ class PostController extends Controller
     public function index(Request $request)
     {
         $query = Post::with(['author', 'category', 'tags'])
-            ->when($request->search, function ($query, $search) {
-                $query->where('title', 'like', "%{$search}%")
-                    ->orWhere('content', 'like', "%{$search}%");
-            })
-            ->when($request->status, function ($query, $status) {
-                if ($status === 'published') {
-                    $query->whereNotNull('published_at');
-                } elseif ($status === 'draft') {
-                    $query->whereNull('published_at')
-                        ->where('review_status', '!=', 'reviewing');
-                } elseif ($status === 'reviewing') {
-                    $query->where('review_status', 'reviewing');
-                }
-            })
-            ->when($request->category, function ($query, $categoryId) {
-                $query->where('category_id', $categoryId);
-            })
-            ->when($request->tag, function ($query, $tagId) {
-                $query->whereHas('tags', function ($q) use ($tagId) {
-                    $q->where('id', $tagId);
-                });
-            })
-            ->when($request->sort, function ($query, $sort) {
-                [$column, $direction] = explode(',', $sort);
-                
-                switch ($column) {
-                    case 'author':
-                        $query->join('users', 'posts.author_id', '=', 'users.id')
-                              ->orderBy('users.name', $direction)
-                              ->select('posts.*');
-                        break;
-                    case 'category':
-                        $query->join('categories', 'posts.category_id', '=', 'categories.id')
-                              ->orderBy('categories.name', $direction)
-                              ->select('posts.*');
-                        break;
-                    case 'title':
-                    case 'created_at':
-                    case 'published_at':
-                        $query->orderBy($column, $direction);
-                        break;
-                    default:
-                        $query->orderByDesc('published_at')
-                              ->orderByDesc('created_at');
-                }
-            }, function ($query) {
-                $query->orderByDesc('published_at')
-                      ->orderByDesc('created_at');
-            });
+            ->withCount(['comments', 'likes'])
+            ->filter($request->only([
+                'search',
+                'status',
+                'category',
+                'tag',
+                'date_from',
+                'date_to',
+                'min_views',
+                'max_views',
+                'min_likes',
+                'max_likes'
+            ]));
 
-        $posts = $query->paginate(10);
+        // 处理排序
+        if ($sort = $request->input('sort')) {
+            [$field, $direction] = explode(',', $sort);
+            $direction = in_array($direction, ['asc', 'desc']) ? $direction : 'desc';
+            
+            switch ($field) {
+                case 'title':
+                case 'published_at':
+                case 'created_at':
+                case 'views':
+                    $query->orderBy($field, $direction);
+                    break;
+                case 'likes_count':
+                    $query->withCount('likes')
+                        ->orderBy('likes_count', $direction);
+                    break;
+                case 'comments_count':
+                    $query->withCount('comments')
+                        ->orderBy('comments_count', $direction);
+                    break;
+                case 'author':
+                    $query->join('users', 'posts.author_id', '=', 'users.id')
+                        ->orderBy('users.name', $direction)
+                        ->select('posts.*');
+                    break;
+                case 'category':
+                    $query->leftJoin('categories', 'posts.category_id', '=', 'categories.id')
+                        ->orderBy('categories.name', $direction)
+                        ->select('posts.*');
+                    break;
+                default:
+                    $query->latest('published_at');
+                    break;
+            }
+        } else {
+            $query->latest('published_at');
+        }
+
+        // 获取统计数据
+        $stats = [
+            'total' => Post::count(),
+            'published' => Post::whereNotNull('published_at')->count(),
+            'draft' => Post::whereNull('published_at')->count(),
+            'total_views' => Post::sum('views'),
+            'total_likes' => DB::table('post_likes')->count(),
+            'total_comments' => DB::table('comments')->count(),
+            'categories' => Category::withCount('posts')
+                ->orderByDesc('posts_count')
+                ->limit(5)
+                ->get()
+                ->map(fn($category) => [
+                    'name' => $category->name,
+                    'count' => $category->posts_count
+                ]),
+            'authors' => User::withCount('posts')
+                ->orderByDesc('posts_count')
+                ->limit(5)
+                ->get()
+                ->map(fn($author) => [
+                    'name' => $author->name,
+                    'count' => $author->posts_count
+                ]),
+            'tags' => Tag::withCount('posts')
+                ->orderByDesc('posts_count')
+                ->limit(10)
+                ->get()
+                ->map(fn($tag) => [
+                    'name' => $tag->name,
+                    'count' => $tag->posts_count
+                ]),
+            'trends' => Post::selectRaw('DATE(published_at) as date, COUNT(*) as count')
+                ->whereNotNull('published_at')
+                ->groupBy('date')
+                ->orderBy('date', 'desc')
+                ->limit(30)
+                ->get()
+                ->map(fn($item) => [
+                    'date' => $item->date,
+                    'count' => $item->count
+                ]),
+            'engagement' => [
+                'avg_views' => Post::avg('views'),
+                'avg_likes' => DB::table('post_likes')
+                    ->selectRaw('COUNT(*) / COUNT(DISTINCT post_id) as avg_likes')
+                    ->first()->avg_likes ?? 0,
+                'avg_comments' => DB::table('comments')
+                    ->selectRaw('COUNT(*) / COUNT(DISTINCT post_id) as avg_comments')
+                    ->first()->avg_comments ?? 0,
+            ],
+        ];
+
+        $posts = $query->paginate(10)->withQueryString();
 
         return Inertia::render('Admin/Posts/Index', [
             'posts' => [
-                'data' => collect($posts->items())->map(function ($post) {
+                'data' => $posts->map(function ($post) {
                     return [
                         'id' => $post->id,
                         'title' => $post->title,
                         'slug' => $post->slug,
                         'excerpt' => Str::limit($post->excerpt, 80),
-                        'thumbnail' => $post->thumbnail,
+                        'content' => $post->content,
                         'author' => [
                             'name' => $post->author->name,
                         ],
                         'category' => $post->category ? [
                             'name' => $post->category->name,
                         ] : null,
-                        'status' => $post->published_at 
-                            ? 'published' 
-                            : ($post->review_status === 'reviewing' ? 'reviewing' : 'draft'),
+                        'status' => $post->status,
                         'published_at' => $post->published_at,
-                        'created_at' => $post->created_at,
+                        'views' => $post->views,
+                        'likes_count' => $post->likes_count,
+                        'comments_count' => $post->comments_count,
                     ];
                 }),
                 'meta' => [
@@ -113,14 +170,8 @@ class PostController extends Controller
                     'total' => $posts->total(),
                 ],
             ],
-            'filters' => [
-                'search' => $request->search,
-                'status' => $request->status,
-                'category' => $request->category,
-                'tag' => $request->tag,
-                'sort' => $request->sort,
-            ],
-            'categories' => Category::select('id', 'name')->get(),
+            'filters' => $request->all(),
+            'stats' => $stats,
         ]);
     }
 
@@ -380,28 +431,52 @@ class PostController extends Controller
         }
     }
 
+    /**
+     * 批量删除文章
+     */
     public function batchDestroy(Request $request)
     {
-        try {
-            Post::whereIn('id', $request->ids)->delete();
-            return back()->with('success', '已删除选中的文章！');
-        } catch (\Exception $e) {
-            return back()->with('error', '批量删除失败：' . $e->getMessage());
-        }
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:posts,id'
+        ]);
+
+        Post::whereIn('id', $validated['ids'])->delete();
+
+        return back()->with('success', '已将选中的文章移到回收站');
     }
 
-    public function batchPublish(Request $request)
+    /**
+     * 批量发布文章
+     */
+    public function batchPublish(Request $request) 
     {
-        try {
-            Post::whereIn('id', $request->ids)
-                ->update([
-                    'published_at' => now(),
-                    'review_status' => null
-                ]);
-            return back()->with('success', '已发布选中的文章！');
-        } catch (\Exception $e) {
-            return back()->with('error', '批量发布失败：' . $e->getMessage());
-        }
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:posts,id'
+        ]);
+
+        Post::whereIn('id', $validated['ids'])->update([
+            'status' => 'published',
+            'published_at' => now()
+        ]);
+
+        return back()->with('success', '已发布选中的文章');
+    }
+
+    /**
+     * 批量移到回收站
+     */
+    public function batchTrash(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:posts,id'
+        ]);
+
+        Post::whereIn('id', $validated['ids'])->delete();
+
+        return back()->with('success', '已将选中的文章移到回收站');
     }
 
     public function duplicate(Post $post)
@@ -428,6 +503,30 @@ class PostController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', '复制失败：' . $e->getMessage());
+        }
+    }
+
+    // 添加状态切换方法
+    public function toggleStatus(Post $post)
+    {
+        try {
+            if ($post->status === 'published') {
+                $post->update([
+                    'status' => 'draft',
+                    'published_at' => null
+                ]);
+                $message = '文章已设为草稿';
+            } else {
+                $post->update([
+                    'status' => 'published',
+                    'published_at' => now()
+                ]);
+                $message = '文章已发布';
+            }
+            
+            return back()->with('success', $message);
+        } catch (\Exception $e) {
+            return back()->with('error', '状态更新失败：' . $e->getMessage());
         }
     }
 }

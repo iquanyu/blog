@@ -31,7 +31,7 @@ defineProps({
                                         <div class="absolute left-0 -ml-[3.5px] mt-2 h-1.5 w-1.5 rounded-full border border-gray-200 bg-white ring-1 ring-gray-300 dark:border-gray-800 dark:bg-gray-900 dark:ring-gray-700"></div>
                                         <div class="flex items-baseline gap-6">
                                             <time :datetime="post.published_at" class="text-sm text-gray-500 dark:text-gray-400">
-                                                {{ new Date(post.published_at).toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' }) }}
+                                                {{ post.published_at ? new Date(post.published_at).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }) : '未发布' }}
                                             </time>
                                             <div>
                                                 <h3 class="text-base font-semibold text-gray-900 dark:text-white">

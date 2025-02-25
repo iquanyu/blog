@@ -175,12 +175,12 @@ const goToLogin = () => {
                                     {{ comment.user.name }}
                                 </h3>
                                 <time class="text-sm text-gray-500 dark:text-gray-400">
-                                    {{ new Date(comment.created_at).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }) }}
+                                    {{ comment.created_at.diffForHumans }}
                                 </time>
                             </div>
                             <!-- 删除按钮 -->
                             <button
-                                v-if="page.props.auth.user?.id === comment.user_id"
+                                v-if="page.props.auth.user?.id === comment.user.id"
                                 @click="deleteComment(comment)"
                                 class="text-sm text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
                             >
@@ -190,26 +190,32 @@ const goToLogin = () => {
                         <div class="mt-2 text-gray-700 dark:text-gray-300">
                             {{ comment.content }}
                         </div>
-                        <div class="mt-2 flex items-center gap-4">
+
+                        <!-- 回复按钮 -->
+                        <div class="mt-2">
                             <button
+                                v-if="page.props.auth.user && !replyingTo"
                                 @click="startReply(comment)"
-                                class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+                                class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                             >
-                                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M7.707 3.293a1 1 0 010 1.414L5.414 7H11a7 7 0 017 7v2a1 1 0 11-2 0v-2a5 5 0 00-5-5H5.414l2.293 2.293a1 1 0 11-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                </svg>
                                 回复
                             </button>
                         </div>
 
                         <!-- 回复列表 -->
-                        <div v-if="comment.replies?.length" class="mt-4 space-y-4">
+                        <div v-if="comment.replies?.length" class="relative mt-4 space-y-4 pl-6">
+                            <!-- 回复指示线 -->
+                            <div class="absolute left-0 top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-700"></div>
+                            
                             <article 
                                 v-for="reply in comment.replies" 
                                 :key="reply.id" 
                                 :id="`comment-${reply.id}`"
-                                class="relative ml-6 rounded-lg bg-gray-50 p-4 dark:bg-gray-800/50 scroll-mt-16"
+                                class="relative rounded-lg bg-gray-50/50 p-4 dark:bg-gray-800/30 scroll-mt-16"
                             >
+                                <!-- 回复连接线 -->
+                                <div class="absolute -left-6 top-6 h-px w-6 bg-gray-200 dark:bg-gray-700"></div>
+                                
                                 <div class="flex gap-4">
                                     <div class="flex-none">
                                         <img 
@@ -225,12 +231,12 @@ const goToLogin = () => {
                                                     {{ reply.user.name }}
                                                 </h4>
                                                 <time class="text-sm text-gray-500 dark:text-gray-400">
-                                                    {{ new Date(reply.created_at).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }) }}
+                                                    {{ reply.created_at.diffForHumans }}
                                                 </time>
                                             </div>
                                             <!-- 删除按钮 -->
                                             <button
-                                                v-if="page.props.auth.user?.id === reply.user_id"
+                                                v-if="page.props.auth.user?.id === reply.user.id"
                                                 @click="deleteComment(reply)"
                                                 class="text-sm text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
                                             >
@@ -243,6 +249,41 @@ const goToLogin = () => {
                                     </div>
                                 </div>
                             </article>
+                        </div>
+
+                        <!-- 回复表单 -->
+                        <div v-if="replyingTo?.id === comment.id" class="relative mt-4 pl-6">
+                            <!-- 回复指示线 -->
+                            <div class="absolute left-0 top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-700"></div>
+                            <!-- 回复连接线 -->
+                            <div class="absolute -left-0 top-6 h-px w-6 bg-gray-200 dark:bg-gray-700"></div>
+                            
+                            <div class="relative rounded-lg bg-gray-50/50 p-4 dark:bg-gray-800/30">
+                                <div class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                                    回复 {{ replyingTo.user.name }}：
+                                </div>
+                                <textarea
+                                    v-model="form.content"
+                                    class="block w-full resize-none rounded-md border-0 bg-white px-3 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-900 dark:bg-gray-900 dark:text-white dark:ring-gray-700 dark:focus:ring-gray-600 sm:text-sm sm:leading-6"
+                                    rows="2"
+                                    placeholder="写下你的回复..."
+                                ></textarea>
+                                <div class="mt-2 flex justify-end gap-2">
+                                    <button
+                                        @click="cancelReply"
+                                        class="rounded-md px-2 py-1 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                                    >
+                                        取消
+                                    </button>
+                                    <button
+                                        @click="submitComment"
+                                        :disabled="form.processing || !form.content"
+                                        class="rounded-md bg-gray-900 px-2 py-1 text-sm text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:hover:bg-gray-600"
+                                    >
+                                        {{ form.processing ? '发布中...' : '发布回复' }}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { Head, Link } from '@inertiajs/vue3'
+import { Head, Link, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Badge from '@/Components/Badge.vue'
 import { 
@@ -10,7 +10,8 @@ import {
     CalendarIcon,
     UserIcon,
     FolderIcon,
-    TagIcon
+    TagIcon,
+    XMarkIcon
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -23,6 +24,39 @@ const props = defineProps({
         required: true
     }
 })
+
+// 添加回复相关的响应式变量
+const replyingTo = ref(null)
+const form = useForm({
+    content: '',
+    parent_id: null
+})
+
+// 添加回复相关的方法
+const startReply = (comment) => {
+    replyingTo.value = comment
+    form.parent_id = comment.id
+    form.content = ''
+}
+
+const cancelReply = () => {
+    replyingTo.value = null
+    form.reset()
+}
+
+const submitReply = () => {
+    if (!form.content) return
+
+    form.post(route('posts.comments.store', props.post.slug), {
+        preserveScroll: true,
+        onSuccess: () => {
+            cancelReply()
+        },
+        onError: () => {
+            console.error('评论提交失败')
+        }
+    })
+}
 </script>
 
 <template>
@@ -130,12 +164,58 @@ const props = defineProps({
                                     {{ comment.content }}
                                 </div>
 
+                                <!-- 回复按钮 -->
+                                <div class="mt-2 flex items-center space-x-4">
+                                    <button
+                                        @click="startReply(comment)"
+                                        class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                                    >
+                                        回复
+                                    </button>
+                                </div>
+
+                                <!-- 回复表单 -->
+                                <div v-if="replyingTo?.id === comment.id" class="mt-4">
+                                    <div class="flex space-x-3">
+                                        <div class="min-w-0 flex-1">
+                                            <div class="overflow-hidden rounded-lg border border-gray-300 shadow-sm focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
+                                                <textarea
+                                                    v-model="form.content"
+                                                    rows="3"
+                                                    class="block w-full resize-none border-0 py-3 px-4 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                                                    placeholder="写下你的回复..."
+                                                />
+                                            </div>
+                                            <div class="mt-2 flex items-center justify-end space-x-2">
+                                                <button
+                                                    type="button"
+                                                    @click="cancelReply"
+                                                    class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                                                >
+                                                    取消
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    @click="submitReply"
+                                                    :disabled="form.processing"
+                                                    class="inline-flex items-center rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+                                                >
+                                                    提交回复
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- 回复列表 -->
-                                <div v-if="comment.replies.length" class="mt-4 space-y-4">
+                                <div 
+                                    v-if="comment.replies.length" 
+                                    class="relative mt-4 space-y-4 pl-6 before:absolute before:left-[15px] before:top-0 before:h-full before:w-px before:bg-gray-200 dark:before:bg-gray-700"
+                                >
                                     <div
                                         v-for="reply in comment.replies"
                                         :key="reply.id"
-                                        class="flex space-x-3"
+                                        class="relative flex space-x-3 before:absolute before:left-[-19px] before:top-[15px] before:h-px before:w-3 before:bg-gray-200 dark:before:bg-gray-700"
                                     >
                                         <div class="flex-shrink-0">
                                             <img
@@ -149,7 +229,7 @@ const props = defineProps({
                                                 {{ reply.user.name }}
                                             </p>
                                             <p class="text-sm text-gray-500">
-                                                {{ reply.created_at }}
+                                                {{ reply.created_at.diffForHumans }}
                                             </p>
                                             <div class="mt-2 text-sm text-gray-700">
                                                 {{ reply.content }}

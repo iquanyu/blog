@@ -39,6 +39,43 @@ class PostController extends Controller
     {
         $post->incrementViews();
         
+        // 加载评论数据，包括嵌套评论和用户信息
+        $comments = $post->comments()
+            ->whereNull('parent_id')
+            ->with(['user', 'replies.user'])
+            ->latest()
+            ->get()
+            ->map(function ($comment) {
+                return [
+                    'id' => $comment->id,
+                    'content' => $comment->content,
+                    'created_at' => [
+                        'formatted' => Carbon::parse($comment->created_at)->format('Y年m月d日'),
+                        'diffForHumans' => Carbon::parse($comment->created_at)->diffForHumans(),
+                    ],
+                    'user' => [
+                        'id' => $comment->user->id,
+                        'name' => $comment->user->name,
+                        'profile_photo_url' => $comment->user->profile_photo_url,
+                    ],
+                    'replies' => $comment->replies->map(function ($reply) {
+                        return [
+                            'id' => $reply->id,
+                            'content' => $reply->content,
+                            'created_at' => [
+                                'formatted' => Carbon::parse($reply->created_at)->format('Y年m月d日'),
+                                'diffForHumans' => Carbon::parse($reply->created_at)->diffForHumans(),
+                            ],
+                            'user' => [
+                                'id' => $reply->user->id,
+                                'name' => $reply->user->name,
+                                'profile_photo_url' => $reply->user->profile_photo_url,
+                            ],
+                        ];
+                    }),
+                ];
+            });
+        
         return inertia('Posts/Show', [
             'post' => [
                 'id' => $post->id,
@@ -66,31 +103,7 @@ class PostController extends Controller
                     'slug' => $tag->slug,
                 ]),
             ],
-            'comments' => $post->comments()
-                ->with(['user', 'replies.user'])
-                ->latest()
-                ->paginate(10)
-                ->through(fn($comment) => [
-                    'id' => $comment->id,
-                    'content' => $comment->content,
-                    'created_at' => [
-                        'formatted' => Carbon::parse($comment->created_at)->format('Y年m月d日 H:i'),
-                        'diffForHumans' => Carbon::parse($comment->created_at)->diffForHumans(),
-                    ],
-                    'user' => [
-                        'name' => $comment->user->name,
-                        'avatar' => $comment->user->profile_photo_url,
-                    ],
-                    'replies' => $comment->replies->map(fn($reply) => [
-                        'id' => $reply->id,
-                        'content' => $reply->content,
-                        'created_at' => Carbon::parse($reply->created_at)->diffForHumans(),
-                        'user' => [
-                            'name' => $reply->user->name,
-                            'avatar' => $reply->user->profile_photo_url,
-                        ],
-                    ]),
-                ]),
+            'comments' => $comments
         ]);
     }
 

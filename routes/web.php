@@ -14,6 +14,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\PostLikeController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\UploadController;
+use App\Http\Controllers\Admin\PostRevisionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,6 +32,7 @@ Route::get('/posts/{post:slug}', [BlogController::class, 'show'])->name('posts.s
 Route::get('/categories/{category:slug}', [BlogController::class, 'category'])->name('categories.show');
 Route::get('/archive', [BlogController::class, 'archive'])->name('archive');
 Route::get('/tags/{tag:slug}', [BlogController::class, 'tag'])->name('tags.show');
+Route::get('/about', [BlogController::class, 'about'])->name('blog.about');
 
 Route::middleware([
     'auth:sanctum',
@@ -83,11 +85,21 @@ Route::middleware([
         Route::prefix('posts')->name('posts.')->group(function () {
             Route::delete('batch', [AdminPostController::class, 'batchDestroy'])->name('batch-destroy');
             Route::put('batch/publish', [AdminPostController::class, 'batchPublish'])->name('batch-publish');
+            Route::delete('batch/trash', [AdminPostController::class, 'batchTrash'])->name('batch-trash');
             Route::get('{post:slug}', [AdminPostController::class, 'show'])->name('show');
             Route::get('{post:slug}/edit', [AdminPostController::class, 'edit'])->name('edit');
             Route::delete('{post:slug}', [AdminPostController::class, 'destroy'])->name('destroy');
             Route::put('{post:slug}', [AdminPostController::class, 'update'])->name('update');
             Route::post('{post:slug}/duplicate', [AdminPostController::class, 'duplicate'])->name('duplicate');
+        });
+
+        Route::put('posts/{post}/toggle-status', [AdminPostController::class, 'toggleStatus'])
+            ->name('posts.toggle-status');
+
+        Route::prefix('revisions')->name('revisions.')->group(function () {
+            Route::get('/', [PostRevisionController::class, 'index'])->name('index');
+            Route::get('/{revision}', [PostRevisionController::class, 'show'])->name('show');
+            Route::post('/{revision}/restore', [PostRevisionController::class, 'restore'])->name('restore');
         });
     });
 

@@ -10,6 +10,7 @@ import SearchBar from '@/Components/SearchBar.vue'
 import BackToTop from '@/Components/BackToTop.vue'
 import ReadingProgress from '@/Components/ReadingProgress.vue'
 import { TransitionRoot, TransitionChild } from '@headlessui/vue'
+import Toast from '@/Components/Toast.vue'
 
 defineProps({
     title: String,
@@ -22,12 +23,12 @@ const isLoggedIn = computed(() => !!user.value);
 
 const navigation = computed(() => [
     { name: '首页', href: route('home') },
-    { name: '归档', href: route('archive') },
     ...page.props.categories.map(category => ({
         name: category.name,
         href: route('categories.show', category.slug)
     })),
-    { name: '关于', href: '#' },
+    { name: '归档', href: route('archive') },
+    { name: '关于', href: route('blog.about') },
 ]);
 
 const switchToTeam = (team) => {
@@ -110,9 +111,13 @@ const categories = computed(() => page.props.categories || [])
 // 添加搜索面板的引用
 const searchPanel = ref(null)
 
+
+const isOpen = ref(false); // 确保这里定义了 isOpen
+
 // 打开搜索面板的方法
 const openSearch = () => {
-    searchPanel.value?.openSearch()
+    console.log('打开搜索面板'); // 调试信息
+    isOpen.value = true; // 确保这里设置为 true
 }
 
 // 添加 isMac 判断
@@ -189,18 +194,7 @@ const isMac = computed(() => {
                     </nav>
 
                     <!-- 搜索按钮 -->
-                    <button
-                        type="button"
-                        @click="openSearch"
-                        class="group flex items-center gap-2 rounded-lg bg-white/90 px-4 py-2 text-sm leading-6 text-gray-400 shadow-sm ring-1 ring-gray-900/10 transition-all hover:text-gray-600 hover:ring-gray-900/20 dark:bg-gray-800/90 dark:text-gray-400 dark:ring-white/10 dark:hover:text-gray-300 dark:hover:ring-white/20"
-                    >
-                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
-                        </svg>
-                        <span>快速搜索...</span>
-                        <kbd class="ml-auto flex h-5 w-5 items-center justify-center rounded border border-gray-200 bg-white font-sans text-[10px] font-medium text-gray-400 dark:border-gray-700 dark:bg-gray-800">{{ isMac ? '⌘' : 'Ctrl' }}</kbd>
-                        <kbd class="flex h-5 w-5 items-center justify-center rounded border border-gray-200 bg-white font-sans text-[10px] font-medium text-gray-400 dark:border-gray-700 dark:bg-gray-800">K</kbd>
-                    </button>
+                    <SearchBar />
                 </div>
 
                 <!-- 用户菜单 -->
@@ -208,7 +202,7 @@ const isMac = computed(() => {
                     <template v-if="isLoggedIn">
                         <Dropdown align="right" width="48">
                             <template #trigger>
-                                <button class="flex items-center text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors">
+                                <button class="flex items-center text-sm font-medium text-gray-900 hover:text-gray-600 dark:text-white dark:hover:text-gray-300 transition-colors">
                                     {{ user.name }}
                                     <svg class="ml-2 -mr-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -217,30 +211,51 @@ const isMac = computed(() => {
                             </template>
 
                             <template #content>
-                                <DropdownLink :href="route('profile.show')" class="text-sm">
-                                    个人资料
-                                </DropdownLink>
-                                <DropdownLink 
-                                    v-if="user.can?.['create posts'] || user.is_admin" 
-                                    :href="route('admin.posts.index')"
-                                    class="text-sm"
-                                >
-                                    管理后台
-                                </DropdownLink>
-                                <DropdownLink 
-                                    v-if="user.is_admin" 
-                                    :href="route('admin.dashboard')"
-                                >
+                                <!-- 个人资料链接 -->
+                                <DropdownLink :href="route('profile.show')" as="link" class="text-sm">
                                     <template #icon>
-                                        <svg class="mr-2 h-5 w-5 text-gray-400 group-hover:text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
+                                        <svg class="mr-2 h-5 w-5 text-gray-400 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
                                         </svg>
                                     </template>
-                                    后台管理
+                                    个人资料
                                 </DropdownLink>
-                                <div class="border-t border-gray-100"></div>
+
+                                <!-- 管理后台链接 -->
+                                <template v-if="user.can?.['manage posts'] || user.is_admin">
+                                    <DropdownLink :href="route('admin.posts.index')" as="link" class="text-sm">
+                                        <template #icon>
+                                            <svg class="mr-2 h-5 w-5 text-gray-400 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M7.502 6h7.128A3.375 3.375 0 0118 9.375v9.375a3 3 0 003-3V6.108c0-1.505-1.125-2.811-2.664-2.94a48.972 48.972 0 00-.673-.05A3 3 0 0015 1.5h-1.5a3 3 0 00-2.663 1.618c-.225.015-.45.032-.673.05C8.662 3.295 7.554 4.542 7.502 6zM13.5 3A1.5 1.5 0 0012 4.5h4.5A1.5 1.5 0 0015 3h-1.5z" clip-rule="evenodd" />
+                                                <path fill-rule="evenodd" d="M3 9.375C3 8.339 3.84 7.5 4.875 7.5h9.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-9.75A1.875 1.875 0 013 20.625V9.375zM6 12a.75.75 0 01.75-.75h.008a.75.75 0 01.75.75v.008a.75.75 0 01-.75.75H6.75a.75.75 0 01-.75-.75V12zm2.25 0a.75.75 0 01.75-.75h3.75a.75.75 0 010 1.5H9a.75.75 0 01-.75-.75zM6 15a.75.75 0 01.75-.75h.008a.75.75 0 01.75.75v.008a.75.75 0 01-.75.75H6.75a.75.75 0 01-.75-.75V15zm2.25 0a.75.75 0 01.75-.75h3.75a.75.75 0 010 1.5H9a.75.75 0 01-.75-.75zM6 18a.75.75 0 01.75-.75h.008a.75.75 0 01.75.75v.008a.75.75 0 01-.75.75H6.75a.75.75 0 01-.75-.75V18zm2.25 0a.75.75 0 01.75-.75h3.75a.75.75 0 010 1.5H9a.75.75 0 01-.75-.75z" clip-rule="evenodd" />
+                                            </svg>
+                                        </template>
+                                        文章管理
+                                    </DropdownLink>
+                                </template>
+
+                                <!-- 后台管理链接 -->
+                                <template v-if="user.is_admin">
+                                    <DropdownLink :href="route('admin.dashboard')" as="link" class="text-sm">
+                                        <template #icon>
+                                            <svg class="mr-2 h-5 w-5 text-gray-400 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M2.25 2.25a.75.75 0 000 1.5H3v10.5a3 3 0 003 3h1.21l-1.172 3.513a.75.75 0 001.424.474l.329-.987h8.418l.33.987a.75.75 0 001.422-.474l-1.17-3.513H18a3 3 0 003-3V3.75h.75a.75.75 0 000-1.5H2.25zm6.54 15h6.42l.5 1.5H8.29l.5-1.5zm8.085-8.995a.75.75 0 10-.75-1.299 12.81 12.81 0 00-3.558 3.05L11.03 8.47a.75.75 0 00-1.06 0l-3 3a.75.75 0 101.06 1.06l2.47-2.47 1.617 1.618a.75.75 0 001.146-.102 11.312 11.312 0 013.612-3.321z" clip-rule="evenodd" />
+                                            </svg>
+                                        </template>
+                                        后台管理
+                                    </DropdownLink>
+                                </template>
+
+                                <div class="border-t border-gray-100 dark:border-gray-700"></div>
+
+                                <!-- 退出登录按钮 -->
                                 <form @submit.prevent="logout">
-                                    <DropdownLink as="button" class="text-sm">
+                                    <DropdownLink as="button" class="text-sm w-full">
+                                        <template #icon>
+                                            <svg class="mr-2 h-5 w-5 text-gray-400 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M7.5 3.75A1.5 1.5 0 006 5.25v13.5a1.5 1.5 0 001.5 1.5h6a1.5 1.5 0 001.5-1.5V15a.75.75 0 011.5 0v3.75a3 3 0 01-3 3h-6a3 3 0 01-3-3V5.25a3 3 0 013-3h6a3 3 0 013 3V9A.75.75 0 0115 9V5.25a1.5 1.5 0 00-1.5-1.5h-6zm5.03 4.72a.75.75 0 010 1.06l-1.72 1.72h10.94a.75.75 0 010 1.5H10.81l1.72 1.72a.75.75 0 11-1.06 1.06l-3-3a.75.75 0 010-1.06l3-3a.75.75 0 011.06 0z" clip-rule="evenodd" />
+                                            </svg>
+                                        </template>
                                         退出登录
                                     </DropdownLink>
                                 </form>
@@ -250,7 +265,7 @@ const isMac = computed(() => {
                     <template v-else>
                         <Link 
                             :href="route('login')" 
-                            class="text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors"
+                            class="text-sm font-medium text-gray-900 hover:text-gray-600 dark:text-white dark:hover:text-gray-300 transition-colors"
                         >
                             登录
                         </Link>
@@ -320,7 +335,7 @@ const isMac = computed(() => {
         </header>
 
         <!-- 搜索面板 -->
-        <SearchBar ref="searchPanel" />
+        <!-- <SearchBar ref="searchPanel" @open="openSearch" /> -->
 
         <!-- 页面内容 -->
         <main>
@@ -401,6 +416,7 @@ const isMac = computed(() => {
 
         <ReadingProgress />
         <BackToTop />
+        <Toast />
     </div>
 </template>
 

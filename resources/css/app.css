@@ -1,8 +1,8 @@
+@import 'variables.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import 'variables.css';
 
 [x-cloak] {
     display: none;
@@ -11,6 +11,7 @@
 :root {
     --transition-duration: 200ms;
 }
+
 
 ::view-transition-old(root),
 ::view-transition-new(root) {

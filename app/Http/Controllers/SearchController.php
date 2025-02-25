@@ -16,12 +16,17 @@ class SearchController extends Controller
         $query = $request->input('q');
 
         if (!$query) {
-            return response()->json([]);
+            return response()->json([
+                'posts' => [],
+                'categories' => [],
+                'tags' => [],
+                'users' => []
+            ]);
         }
 
         try {
             // 搜索文章
-            $posts = Post::with(['category'])
+            $posts = Post::with(['category', 'tags', 'author'])
                 ->where('status', 'published')
                 ->where(function($q) use ($query) {
                     $q->where('title', 'like', '%' . $query . '%')
@@ -33,22 +38,25 @@ class SearchController extends Controller
                 ->map(function ($post) {
                     return [
                         'id' => $post->id,
-                        'type' => 'article',
+                        'type' => 'post',
                         'title' => $post->title,
-                        'slug' => $post->slug,
                         'excerpt' => Str::limit(strip_tags($post->content), 100),
+                        'url' => route('posts.show', $post->slug),
+                        'slug' => $post->slug,
                         'category' => $post->category ? [
-                            'id' => $post->category->id,
                             'name' => $post->category->name,
-                            'slug' => $post->category->slug,
+                            'url' => route('categories.show', $post->category->slug)
                         ] : null,
-                        'published_at' => $post->published_at->format('Y-m-d H:i:s')
+                        'author' => [
+                            'name' => $post->author->name,
+                            'avatar' => $post->author->profile_photo_url
+                        ],
+                        'published_at' => $post->published_at->format('Y-m-d')
                     ];
                 });
 
             // 搜索分类
             $categories = Category::where('name', 'like', '%' . $query . '%')
-                ->orWhere('description', 'like', '%' . $query . '%')
                 ->limit(3)
                 ->get()
                 ->map(function ($category) {
@@ -56,19 +64,46 @@ class SearchController extends Controller
                         'id' => $category->id,
                         'type' => 'category',
                         'name' => $category->name,
+                        'url' => route('categories.show', $category->slug),
                         'slug' => $category->slug,
-                        'description' => $category->description,
+                        'description' => $category->description
                     ];
                 });
 
-            // 合并结果
-            $results = $posts->concat($categories);
+            // 搜索标签
+            $tags = Tag::where('name', 'like', '%' . $query . '%')
+                ->limit(3)
+                ->get()
+                ->map(function ($tag) {
+                    return [
+                        'id' => $tag->id,
+                        'type' => 'tag',
+                        'name' => $tag->name,
+                        'url' => route('tags.show', $tag->slug)
+                    ];
+                });
 
-            return response()->json($results);
+            // 搜索用户
+            $users = User::where('name', 'like', '%' . $query . '%')
+                ->limit(3)
+                ->get()
+                ->map(function ($user) {
+                    return [
+                        'id' => $user->id,
+                        'type' => 'user',
+                        'name' => $user->name,
+                        'avatar' => $user->profile_photo_url
+                    ];
+                });
 
+            return response()->json([
+                'posts' => $posts,
+                'categories' => $categories,
+                'tags' => $tags,
+                'users' => $users
+            ]);
         } catch (\Exception $e) {
-            \Log::error('搜索出错: ' . $e->getMessage());
-            return response()->json(['error' => '搜索时发生错误'], 500);
+            return response()->json(['error' => '搜索请求失败'], 500);
         }
     }
 

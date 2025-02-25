@@ -40,32 +40,32 @@ const closeModal = () => {
 <template>
     <ActionSection>
         <template #title>
-            Delete Account
+            删除账户
         </template>
 
         <template #description>
-            Permanently delete your account.
+            永久删除您的账户。
         </template>
 
         <template #content>
-            <div class="max-w-xl text-sm text-gray-600">
-                Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.
+            <div class="max-w-xl text-sm text-gray-600 dark:text-gray-400">
+                一旦您的账户被删除，所有资源和数据将被永久删除。在删除您的账户之前，请下载您想要保留的任何数据或信息。
             </div>
 
             <div class="mt-5">
                 <DangerButton @click="confirmUserDeletion">
-                    Delete Account
+                    删除账户
                 </DangerButton>
             </div>
 
-            <!-- Delete Account Confirmation Modal -->
+            <!-- 删除账户确认对话框 -->
             <DialogModal :show="confirmingUserDeletion" @close="closeModal">
                 <template #title>
-                    Delete Account
+                    删除账户
                 </template>
 
                 <template #content>
-                    Are you sure you want to delete your account? Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.
+                    您确定要删除您的账户吗？一旦您的账户被删除，所有资源和数据将被永久删除。请输入您的密码以确认您要永久删除您的账户。
 
                     <div class="mt-4">
                         <TextInput
@@ -73,7 +73,7 @@ const closeModal = () => {
                             v-model="form.password"
                             type="password"
                             class="mt-1 block w-3/4"
-                            placeholder="Password"
+                            placeholder="密码"
                             autocomplete="current-password"
                             @keyup.enter="deleteUser"
                         />
@@ -84,16 +84,16 @@ const closeModal = () => {
 
                 <template #footer>
                     <SecondaryButton @click="closeModal">
-                        Cancel
+                        取消
                     </SecondaryButton>
 
                     <DangerButton
-                        class="ms-3"
+                        class="ml-3"
                         :class="{ 'opacity-25': form.processing }"
                         :disabled="form.processing"
                         @click="deleteUser"
                     >
-                        Delete Account
+                        删除账户
                     </DangerButton>
                 </template>
             </DialogModal>

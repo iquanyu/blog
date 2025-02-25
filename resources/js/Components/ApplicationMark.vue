@@ -1,6 +1,56 @@
+<script setup>
+defineProps({
+    class: {
+        type: String,
+        default: 'w-8 h-8'
+    }
+})
+</script>
+
 <template>
-    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M11.395 44.428C4.557 40.198 0 32.632 0 24 0 10.745 10.745 0 24 0a23.891 23.891 0 0113.997 4.502c-.2 17.907-11.097 33.245-26.602 39.926z" fill="#6875F5" />
-        <path d="M14.134 45.885A23.914 23.914 0 0024 48c13.255 0 24-10.745 24-24 0-3.516-.756-6.856-2.115-9.866-4.659 15.143-16.608 27.092-31.75 31.751z" fill="#6875F5" />
+    <svg 
+        :class="class"
+        viewBox="0 0 50 50" 
+        fill="none" 
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <!-- 主圆形背景 -->
+        <circle 
+            cx="25" 
+            cy="25" 
+            r="23" 
+            class="fill-orange-500 dark:fill-orange-400"
+        />
+        
+        <!-- 书本形状 -->
+        <path 
+            d="M15 15v20c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V15c0-1.1-.9-2-2-2H17c-1.1 0-2 .9-2 2z"
+            class="fill-white dark:fill-gray-900"
+        />
+        
+        <!-- 书页纹理 -->
+        <path 
+            d="M19 17h12M19 21h12M19 25h8"
+            stroke="currentColor"
+            class="stroke-orange-200 dark:stroke-orange-700"
+            stroke-width="1.5"
+            stroke-linecap="round"
+        />
+        
+        <!-- 装饰性笔画 -->
+        <circle 
+            cx="35" 
+            cy="15" 
+            r="2" 
+            class="fill-white dark:fill-gray-900"
+        />
+        
+        <!-- 动态光效 -->
+        <path 
+            d="M15 35l5-5"
+            class="stroke-white/50 dark:stroke-gray-900/50"
+            stroke-width="1.5"
+            stroke-linecap="round"
+        />
     </svg>
 </template>

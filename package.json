@@ -24,6 +24,7 @@
         "@headlessui/vue": "^1.7.23",
         "@heroicons/vue": "^2.2.0",
         "@vueup/vue-quill": "^1.2.0",
+        "chart.js": "^4.4.8",
         "highlight.js": "^11.11.1",
         "lodash": "^4.17.21",
         "lodash-es": "^4.17.21",
