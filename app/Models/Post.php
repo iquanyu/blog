@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Post extends Model
 {
@@ -68,7 +69,10 @@ class Post extends Model
 
         static::saving(function ($post) {
             if (empty($post->excerpt)) {
-                $post->excerpt = Str::limit(strip_tags($post->content), 200);
+                // 先移除所有 HTML 标签，然后清理 Markdown 标记，最后限制长度
+                $cleanContent = preg_replace('/[#*`>-]/', '', strip_tags($post->content));
+                $cleanContent = preg_replace('/\s+/', ' ', $cleanContent);
+                $post->excerpt = Str::limit(trim($cleanContent), 200);
             }
             
             if (empty($post->slug)) {
@@ -76,16 +80,25 @@ class Post extends Model
             }
             
             // 净化 HTML 内容
-            $post->content = clean($post->content);
+            //$post->content = clean($post->content);
         });
 
         static::updating(function ($post) {
-            if ($post->isDirty('content')) {
-                $post->revisions()->create([
-                    'user_id' => auth()->id(),
-                    'content' => $post->getOriginal('content'),
-                    'reason' => request('revision_reason')
-                ]);
+            // 如果禁用了修订版本创建，则跳过
+            if ($post->preventRevision) {
+                return;
+            }
+
+            // 检查是否有实质性内容变化
+            $hasContentChanges = $post->isDirty(['content', 'title', 'excerpt', 'status', 'category_id']);
+            
+            // 修复：明确指定表名以避免 id 字段歧义
+            $currentTags = $post->tags()->pluck('tags.id')->toArray();
+            $newTags = request('tags', []);
+            $hasTagChanges = array_diff($currentTags, $newTags) || array_diff($newTags, $currentTags);
+
+            if ($hasContentChanges || $hasTagChanges) {
+                $post->createRevision(request('revision_reason') ?? '更新文章');
             }
         });
     }
@@ -178,8 +191,52 @@ class Post extends Model
     }
 
     // 添加版本历史关联
-    public function revisions()
+    public function revisions(): HasMany
     {
-        return $this->hasMany(PostRevision::class);
+        return $this->hasMany(PostRevision::class)->orderByDesc('created_at');
     }
+
+    public function createRevision(?string $reason = null): void
+    {
+        $this->revisions()->create([
+            'user_id' => auth()->id(),
+            'content' => $this->getOriginal('content'),
+            'title' => $this->getOriginal('title'),
+            'excerpt' => $this->getOriginal('excerpt'),
+            'featured_image_url' => $this->getOriginal('featured_image'),
+            'status' => $this->getOriginal('status'),
+            'reason' => $reason,
+            'meta' => [
+                'category_id' => $this->getOriginal('category_id'),
+                'category_name' => $this->category?->name,
+                'tags' => $this->tags->pluck('id')->toArray(),
+                'tag_names' => $this->tags->pluck('name')->toArray(),
+            ],
+        ]);
+    }
+
+    public function restoreFromRevision(PostRevision $revision): void
+    {
+        // 暂时禁用修订版本创建
+        $this->preventRevision = true;
+
+        $this->update([
+            'content' => $revision->content,
+            'title' => $revision->title,
+            'excerpt' => $revision->excerpt,
+            'featured_image_url' => $revision->featured_image_url,
+            'status' => $revision->status,
+        ]);
+
+        if ($meta = $revision->meta) {
+            $this->category_id = $meta['category_id'] ?? $this->category_id;
+            $this->tags()->sync($meta['tags'] ?? []);
+        }
+
+        // 恢复修订版本创建
+        $this->preventRevision = false;
+    }
+
+    // 添加属性来控制是否创建修订版本
+    protected $preventRevision = false;
 }

@@ -13,6 +13,8 @@ import {
     TagIcon,
     XMarkIcon
 } from '@heroicons/vue/24/outline'
+import MarkdownRenderer from '@/Components/MarkdownRenderer.vue'
+import { formatDate } from '@/utils/date'
 
 const props = defineProps({
     post: {
@@ -24,6 +26,9 @@ const props = defineProps({
         required: true
     }
 })
+
+// 添加调试信息
+console.log('文章内容:', props.post.content);
 
 // 添加回复相关的响应式变量
 const replyingTo = ref(null)
@@ -60,188 +65,81 @@ const submitReply = () => {
 </script>
 
 <template>
+    <Head :title="post.title" />
+
     <AppLayout>
-        <Head :title="post.title" />
-
-        <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-            <!-- 文章头部 -->
-            <div class="overflow-hidden rounded-lg bg-white shadow">
-                <div class="px-4 py-5 sm:p-6">
-                    <!-- 标题和状态 -->
-                    <div class="flex items-center justify-between">
-                        <h1 class="text-2xl font-bold text-gray-900">{{ post.title }}</h1>
-                        <Badge
-                            :variant="post.status === 'published' ? 'primary' : 'warning'"
-                        >
-                            {{ post.status_text }}
-                        </Badge>
-                    </div>
-
-                    <!-- 元信息 -->
-                    <div class="mt-4 flex flex-wrap items-center gap-4 text-sm text-gray-500">
-                        <div class="flex items-center gap-1">
-                            <CalendarIcon class="h-4 w-4" />
-                            <span>{{ post.published_at?.formatted }}</span>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <UserIcon class="h-4 w-4" />
+        <div class="py-12">
+            <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+                <!-- 文章头部 -->
+                <div class="mb-8">
+                    <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                        {{ post.title }}
+                    </h1>
+                    
+                    <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 space-x-4">
+                        <div class="flex items-center">
+                            <img 
+                                :src="post.author.avatar" 
+                                :alt="post.author.name"
+                                class="w-8 h-8 rounded-full mr-2"
+                            >
                             <span>{{ post.author.name }}</span>
                         </div>
-                        <div v-if="post.category" class="flex items-center gap-1">
-                            <FolderIcon class="h-4 w-4" />
-                            <Link 
-                                :href="route('categories.show', post.category.slug)"
-                                class="hover:text-orange-600"
-                            >
-                                {{ post.category.name }}
-                            </Link>
+                        <div>{{ formatDate(post.published_at) }}</div>
+                        <div>{{ post.category?.name || '未分类' }}</div>
+                        <div class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                            </svg>
+                            {{ post.views }}
                         </div>
                     </div>
+                </div>
 
-                    <!-- 标签 -->
-                    <div v-if="post.tags.length" class="mt-4 flex flex-wrap gap-2">
-                        <Link
-                            v-for="tag in post.tags"
-                            :key="tag.slug"
-                            :href="route('tags.show', tag.slug)"
-                            class="inline-flex items-center gap-1 rounded-full bg-orange-50 px-3 py-1 text-sm font-medium text-orange-700 hover:bg-orange-100"
-                        >
-                            <TagIcon class="h-4 w-4" />
-                            {{ tag.name }}
-                        </Link>
-                    </div>
-
-                    <!-- 统计信息 -->
-                    <div class="mt-6 flex items-center gap-6 text-sm text-gray-500">
-                        <div class="flex items-center gap-1">
-                            <EyeIcon class="h-5 w-5" />
-                            <span>{{ post.views }} 次阅读</span>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <HeartIcon class="h-5 w-5" />
-                            <span>{{ post.likes_count }} 次点赞</span>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <ChatBubbleLeftIcon class="h-5 w-5" />
-                            <span>{{ post.comments_count }} 条评论</span>
-                        </div>
-                    </div>
+                <!-- 特色图片 -->
+                <div v-if="post.featured_image" class="mb-8">
+                    <img 
+                        :src="post.featured_image" 
+                        :alt="post.title"
+                        class="w-full rounded-lg shadow-lg"
+                    >
                 </div>
 
                 <!-- 文章内容 -->
-                <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
-                    <div class="prose max-w-none" v-html="post.content" />
-                </div>
-            </div>
-
-            <!-- 评论区 -->
-            <div class="mt-8">
-                <h2 class="text-lg font-medium text-gray-900">评论</h2>
-                
-                <!-- 评论列表 -->
-                <div class="mt-4 space-y-6">
-                    <div
-                        v-for="comment in comments.data"
-                        :key="comment.id"
-                        class="bg-white p-6 shadow sm:rounded-lg"
-                    >
-                        <div class="flex space-x-3">
-                            <div class="flex-shrink-0">
-                                <img
-                                    :src="comment.user.avatar"
-                                    :alt="comment.user.name"
-                                    class="h-10 w-10 rounded-full"
-                                >
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <p class="text-sm font-medium text-gray-900">
-                                    {{ comment.user.name }}
-                                </p>
-                                <p class="text-sm text-gray-500">
-                                    {{ comment.created_at.diffForHumans }}
-                                </p>
-                                <div class="mt-2 text-sm text-gray-700">
-                                    {{ comment.content }}
-                                </div>
-
-                                <!-- 回复按钮 -->
-                                <div class="mt-2 flex items-center space-x-4">
-                                    <button
-                                        @click="startReply(comment)"
-                                        class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-                                    >
-                                        回复
-                                    </button>
-                                </div>
-
-                                <!-- 回复表单 -->
-                                <div v-if="replyingTo?.id === comment.id" class="mt-4">
-                                    <div class="flex space-x-3">
-                                        <div class="min-w-0 flex-1">
-                                            <div class="overflow-hidden rounded-lg border border-gray-300 shadow-sm focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
-                                                <textarea
-                                                    v-model="form.content"
-                                                    rows="3"
-                                                    class="block w-full resize-none border-0 py-3 px-4 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
-                                                    placeholder="写下你的回复..."
-                                                />
-                                            </div>
-                                            <div class="mt-2 flex items-center justify-end space-x-2">
-                                                <button
-                                                    type="button"
-                                                    @click="cancelReply"
-                                                    class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                                                >
-                                                    取消
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    @click="submitReply"
-                                                    :disabled="form.processing"
-                                                    class="inline-flex items-center rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
-                                                >
-                                                    提交回复
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 回复列表 -->
-                                <div 
-                                    v-if="comment.replies.length" 
-                                    class="relative mt-4 space-y-4 pl-6 before:absolute before:left-[15px] before:top-0 before:h-full before:w-px before:bg-gray-200 dark:before:bg-gray-700"
-                                >
-                                    <div
-                                        v-for="reply in comment.replies"
-                                        :key="reply.id"
-                                        class="relative flex space-x-3 before:absolute before:left-[-19px] before:top-[15px] before:h-px before:w-3 before:bg-gray-200 dark:before:bg-gray-700"
-                                    >
-                                        <div class="flex-shrink-0">
-                                            <img
-                                                :src="reply.user.avatar"
-                                                :alt="reply.user.name"
-                                                class="h-8 w-8 rounded-full"
-                                            >
-                                        </div>
-                                        <div class="min-w-0 flex-1">
-                                            <p class="text-sm font-medium text-gray-900">
-                                                {{ reply.user.name }}
-                                            </p>
-                                            <p class="text-sm text-gray-500">
-                                                {{ reply.created_at.diffForHumans }}
-                                            </p>
-                                            <div class="mt-2 text-sm text-gray-700">
-                                                {{ reply.content }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                <article class="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden">
+                    <div class="p-6 sm:p-8">
+                        <div v-if="!post.content" class="text-red-500 mb-4">
+                            警告：文章内容为空
+                        </div>
+                        
+                        <div v-else>
+                            <MarkdownRenderer 
+                                :content="post.content" 
+                                class="markdown-content"
+                            />
                         </div>
                     </div>
+                </article>
+
+                <!-- 标签 -->
+                <div class="mt-6 flex flex-wrap gap-2" v-if="post.tags?.length">
+                    <span 
+                        v-for="tag in post.tags" 
+                        :key="tag.id"
+                        class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100"
+                    >
+                        {{ tag.name }}
+                    </span>
                 </div>
             </div>
         </div>
     </AppLayout>
-</template> 
+</template>
+
+<style>
+/* 添加基础样式确保内容可见 */
+.markdown-content {
+    @apply text-gray-900 dark:text-gray-100;
+}
+</style> 

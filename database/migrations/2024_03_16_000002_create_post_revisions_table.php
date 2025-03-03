@@ -13,7 +13,12 @@ return new class extends Migration
             $table->foreignId('post_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->text('content');
-            $table->string('reason')->nullable();
+            $table->string('title');
+            $table->string('excerpt')->nullable();
+            $table->string('featured_image_url')->nullable();
+            $table->string('status');
+            $table->text('reason')->nullable();
+            $table->json('meta')->nullable();
             $table->timestamps();
         });
     }

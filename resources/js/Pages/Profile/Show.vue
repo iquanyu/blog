@@ -5,11 +5,19 @@ import LogoutOtherBrowserSessionsForm from '@/Pages/Profile/Partials/LogoutOther
 import TwoFactorAuthenticationForm from '@/Pages/Profile/Partials/TwoFactorAuthenticationForm.vue';
 import UpdatePasswordForm from '@/Pages/Profile/Partials/UpdatePasswordForm.vue';
 import UpdateProfileInformationForm from '@/Pages/Profile/Partials/UpdateProfileInformationForm.vue';
+import AvatarUpload from '@/Components/AvatarUpload.vue'
+import InputLabel from '@/Components/InputLabel.vue'
 
 defineProps({
     confirmsTwoFactorAuthentication: Boolean,
     sessions: Array,
 });
+
+// 处理头像上传成功
+const handleAvatarUploaded = (url) => {
+    // 更新用户头像
+    form.profile_photo_path = url
+}
 </script>
 
 <template>
@@ -27,6 +35,37 @@ defineProps({
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="space-y-10 divide-y divide-gray-900/10 dark:divide-gray-700">
+
+
+                    <!-- 头像上传 -->
+                    <div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
+                        <div class="px-4 sm:px-0">
+                            <h2 class="text-base font-semibold leading-7 text-gray-900 dark:text-white">头像</h2>
+                            <p class="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                                更新您的头像。
+                            </p>
+                        </div>
+
+                        <div class="bg-white dark:bg-gray-800 shadow-sm ring-1 ring-gray-900/5 dark:ring-gray-700 rounded-lg md:col-span-2">
+                            <div class="px-4 py-6 sm:p-8">
+                                <div class="col-span-6 sm:col-span-4">
+                                    <InputLabel for="photo" value="头像" />
+                                    
+                                    <!-- 头像上传组件 -->
+                                    <div class="mt-2">
+                                        <AvatarUpload
+                                            :current-avatar="$page.props.auth.user.profile_photo_url"
+                                            upload-url="/profile/avatar"
+                                        />
+                                        <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                            点击头像即可更换。支持 JPG、PNG、GIF 格式，最大 2MB。
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- 个人信息 -->
                     <div class="grid grid-cols-1 gap-x-8 gap-y-8 md:grid-cols-3">
                         <div class="px-4 sm:px-0">

@@ -15,6 +15,9 @@ use App\Http\Controllers\PostLikeController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\UploadController;
 use App\Http\Controllers\Admin\PostRevisionController;
+use App\Http\Controllers\AuthorPostController;
+use App\Http\Controllers\Author\UploadController as AuthorUploadController;
+use App\Http\Controllers\ProfileAvatarController;
 
 /*
 |--------------------------------------------------------------------------
@@ -112,4 +115,28 @@ Route::middleware([
         Route::post('/posts/{post:slug}/like', [PostLikeController::class, 'store'])->name('posts.like');
         Route::delete('/posts/{post:slug}/like', [PostLikeController::class, 'destroy'])->name('posts.unlike');
     });
+
+    // 作者文章管理路由
+    Route::middleware(['auth'])->prefix('author')->name('author.')->group(function () {
+        Route::get('/posts', [AuthorPostController::class, 'index'])->name('posts.index');
+        Route::get('/posts/create', [AuthorPostController::class, 'create'])->name('posts.create');
+        Route::post('/posts', [AuthorPostController::class, 'store'])->name('posts.store');
+        Route::get('/posts/{post}/edit', [AuthorPostController::class, 'edit'])->name('posts.edit');
+        Route::put('/posts/{post}', [AuthorPostController::class, 'update'])->name('posts.update');
+        Route::delete('/posts/{post}', [AuthorPostController::class, 'destroy'])->name('posts.destroy');
+        
+        // 图片上传
+        Route::post('/upload/image', [AuthorUploadController::class, 'image'])
+            ->name('upload.image');
+
+        // 文章版本历史
+        Route::post('posts/{post:slug}/revisions/{revision}/restore', [AuthorPostController::class, 'restore'])
+            ->name('posts.revisions.restore')
+            ->whereNumber('revision');
+    });
+
+    // 用户头像上传
+    Route::post('/profile/avatar', [ProfileAvatarController::class, 'update'])
+        ->name('profile.avatar.update')
+        ->middleware(['auth']);
 });

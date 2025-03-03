@@ -41,7 +41,7 @@ class CommentSeeder extends Seeder
 
         // 为每篇文章创建2-5条评论
         foreach ($posts as $post) {
-            $commentCount = rand(2, 5);
+            $commentCount = rand(2, 10);
             
             for ($i = 0; $i < $commentCount; $i++) {
                 // 创建主评论
@@ -54,7 +54,7 @@ class CommentSeeder extends Seeder
 
                 // 50%的概率添加1-3条回复
                 if (rand(0, 1)) {
-                    $replyCount = rand(1, 3);
+                    $replyCount = rand(1, 10);
                     
                     for ($j = 0; $j < $replyCount; $j++) {
                         Comment::create([

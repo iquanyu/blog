@@ -9,25 +9,34 @@ use Illuminate\Support\Str;
 
 class TagSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
-        // 创建一些常用标签
         $tags = [
-            ['name' => 'Laravel', 'slug' => 'laravel'],
-            ['name' => 'Vue.js', 'slug' => 'vuejs'],
-            ['name' => 'PHP', 'slug' => 'php'],
-            ['name' => 'JavaScript', 'slug' => 'javascript'],
-            ['name' => 'Tailwind CSS', 'slug' => 'tailwind-css'],
-            ['name' => '前端开发', 'slug' => 'frontend'],
-            ['name' => '后端开发', 'slug' => 'backend'],
-            ['name' => '全栈开发', 'slug' => 'full-stack'],
-            ['name' => '开发工具', 'slug' => 'dev-tools'],
-            ['name' => '最佳实践', 'slug' => 'best-practices'],
+            '前端开发' => ['slug' => 'frontend', 'color' => '#42b883'],
+            '后端开发' => ['slug' => 'backend', 'color' => '#ff2d20'],
+            '设计模式' => ['slug' => 'design-pattern', 'color' => '#3178c6'],
+            '项目管理' => ['slug' => 'project-management', 'color' => '#38bdf8'],
+            '用户体验' => ['slug' => 'user-experience', 'color' => '#61dafb'],
+            '性能优化' => ['slug' => 'performance', 'color' => '#339933'],
+            '数据库' => ['slug' => 'database', 'color' => '#4479a1'],
+            '架构设计' => ['slug' => 'architecture', 'color' => '#dc382d'],
+            'Vue.js' => ['slug' => 'vuejs', 'color' => '#42b883'],
+            'Laravel' => ['slug' => 'laravel', 'color' => '#ff2d20'],
+            '微服务' => ['slug' => 'microservice', 'color' => '#2496ed'],
+            '人工智能' => ['slug' => 'ai', 'color' => '#f05032'],
+            '区块链' => ['slug' => 'blockchain', 'color' => '#7b41d8'],
+            '云计算' => ['slug' => 'cloud-computing', 'color' => '#0080ff'],
+            '网络安全' => ['slug' => 'security', 'color' => '#ff4444']
         ];
 
-        // 批量创建标签
-        foreach ($tags as $tag) {
-            Tag::create($tag);
+        foreach ($tags as $name => $data) {
+            Tag::create([
+                'name' => $name,
+                'slug' => $data['slug'],
+                //'color' => $data['color'],
+                'created_at' => now()->subDays(rand(30, 60)),
+                'updated_at' => now()->subDays(rand(0, 30))
+            ]);
         }
 
         // 获取所有文章和标签
