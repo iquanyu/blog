@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class CategoryController extends Controller
 {
@@ -36,7 +37,17 @@ class CategoryController extends Controller
      */
     public function show(Category $category)
     {
-        //
+        $posts = $category->posts()
+            ->with(['author', 'tags'])
+            ->where('status', 'published')
+            ->whereNotNull('published_at')
+            ->orderBy('published_at', 'desc')
+            ->paginate(10);
+        
+        return Inertia::render('Categories/Show', [
+            'category' => $category,
+            'posts' => $posts,
+        ]);
     }
 
     /**

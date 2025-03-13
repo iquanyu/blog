@@ -2,71 +2,97 @@
 
 namespace Database\Seeders;
 
+use App\Models\Comment;
 use App\Models\Post;
 use App\Models\User;
-use App\Models\Comment;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 
 class CommentSeeder extends Seeder
 {
-    public function run()
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
     {
-        // 获取所有已发布的文章和用户
-        $posts = Post::where('status', 'published')->get();
+        $posts = Post::all();
         $users = User::all();
 
-        // 评论内容模板
-        $commentTemplates = [
-            '写得很好，学到了很多！',
-            '这篇文章讲解得很清楚，感谢分享。',
-            '期待更多类似的文章。',
-            '这个观点很有意思，值得深入探讨。',
-            '文章结构清晰，内容充实。',
-            '这个主题很有意义，希望能有后续的分享。',
-            '确实如此，我也有类似的经历。',
-            '分析得很到位，收获很大。',
-            '这个例子很实用，正好解决了我的问题。',
-            '思路很清晰，讲解很详细。'
-        ];
+        // 批量创建评论
+        $this->command->info('创建评论...');
+        $comments = collect();
 
-        // 回复内容模板
-        $replyTemplates = [
-            '同意你的观点！',
-            '补充得很好，谢谢分享。',
-            '确实是这样的。',
-            '学习了，感谢指出。',
-            '这个角度很新颖。'
-        ];
-
-        // 为每篇文章创建2-5条评论
+        // 为每篇文章创建评论
         foreach ($posts as $post) {
-            $commentCount = rand(2, 10);
-            
-            for ($i = 0; $i < $commentCount; $i++) {
-                // 创建主评论
-                $comment = Comment::create([
-                    'post_id' => $post->id,
-                    'user_id' => $users->random()->id,
-                    'content' => Arr::random($commentTemplates),
-                    'created_at' => $post->published_at->addHours(rand(1, 72))
-                ]);
+            // 创建主评论（减少数量）
+            $mainComments = Comment::factory(rand(1, 2))
+                ->create()
+                ->each(function ($comment) use ($post, $users) {
+                    $comment->post()->associate($post);
+                    $comment->user()->associate($users->random());
+                    $comment->save();
+                });
 
-                // 50%的概率添加1-3条回复
-                if (rand(0, 1)) {
-                    $replyCount = rand(1, 10);
-                    
-                    for ($j = 0; $j < $replyCount; $j++) {
-                        Comment::create([
-                            'post_id' => $post->id,
-                            'user_id' => $users->random()->id,
-                            'parent_id' => $comment->id,
-                            'content' => Arr::random($replyTemplates),
-                            'created_at' => $comment->created_at->addHours(rand(1, 24))
-                        ]);
-                    }
-                }
+            $comments = $comments->merge($mainComments);
+
+            // 为每个主评论创建回复（减少数量）
+            foreach ($mainComments as $mainComment) {
+                $replies = Comment::factory(rand(0, 1)) // 50% 概率没有回复
+                    ->create()
+                    ->each(function ($reply) use ($post, $users, $mainComment) {
+                        $reply->post()->associate($post);
+                        $reply->user()->associate($users->random());
+                        $reply->parent_id = $mainComment->id;
+                        $reply->save();
+                    });
+
+                $comments = $comments->merge($replies);
             }
         }
+
+        // 批量更新评论统计
+        $this->command->info('更新评论统计...');
+        $postCounts = $comments->groupBy('post_id')
+            ->map->count()
+            ->toArray();
+
+        foreach ($postCounts as $postId => $count) {
+            DB::table('posts')
+                ->where('id', $postId)
+                ->update(['comment_count' => $count]);
+        }
+
+        // 创建一些热门评论（减少点赞数量）
+        $this->command->info('创建热门评论...');
+        $popularComments = $comments->random(min(5, $comments->count()));
+        foreach ($popularComments as $comment) {
+            $likeCount = rand(3, 8); // 减少点赞数量
+            $likeUsers = $users->random(min($likeCount, $users->count()));
+            $comment->likes()->attach($likeUsers);
+        }
+
+        // 创建一些被标记为垃圾的评论
+        $this->command->info('创建垃圾评论...');
+        Comment::factory(2) // 减少垃圾评论数量
+            ->create()
+            ->each(function ($comment) use ($posts, $users) {
+                $comment->post()->associate($posts->random());
+                $comment->user()->associate($users->random());
+                $comment->is_spam = true;
+                $comment->save();
+            });
+
+        // 创建一些待审核的评论
+        $this->command->info('创建待审核评论...');
+        Comment::factory(2) // 减少待审核评论数量
+            ->create()
+            ->each(function ($comment) use ($posts, $users) {
+                $comment->post()->associate($posts->random());
+                $comment->user()->associate($users->random());
+                $comment->is_approved = false;
+                $comment->save();
+            });
+
+        $this->command->info('评论创建完成！');
     }
 } 

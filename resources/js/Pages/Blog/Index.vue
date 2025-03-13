@@ -44,7 +44,7 @@ defineProps({
                                 <!-- 文章内容 -->
                                 <div class="max-w-xl">
                                     <h3 class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white transition duration-300 group-hover:text-gray-600 dark:group-hover:text-gray-300">
-                                        <Link :href="route('posts.show', post.slug)">
+                                        <Link :href="route('blog.posts.show', post.slug)">
                                             {{ post.title }}
                                         </Link>
                                     </h3>
@@ -54,7 +54,7 @@ defineProps({
                                     <div class="mt-4 flex gap-x-2.5 text-sm leading-6 text-gray-500 dark:text-gray-400">
                                         <div v-if="post.category" class="flex gap-x-2.5">
                                             <Link 
-                                                :href="route('categories.show', post.category.slug)"
+                                                :href="route('blog.categories.show', post.category.slug)"
                                                 class="font-medium hover:text-gray-900 dark:hover:text-white transition-colors"
                                             >
                                                 {{ post.category.name }}

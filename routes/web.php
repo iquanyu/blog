@@ -3,18 +3,22 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Controllers\BlogController;
-use App\Http\Controllers\PostController;
-use App\Http\Controllers\CategoryController;
+// 前端控制器
+use App\Http\Controllers\Frontend\BlogController;
+use App\Http\Controllers\Frontend\PostController;
+use App\Http\Controllers\Frontend\CategoryController;
+use App\Http\Controllers\Frontend\TagController;
+// 后台控制器
 use App\Http\Controllers\Admin\PostController as AdminPostController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\TagController as AdminTagController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
-use App\Http\Controllers\CommentController;
-use App\Http\Controllers\PostLikeController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\UploadController;
 use App\Http\Controllers\Admin\PostRevisionController;
+// 通用控制器
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\PostLikeController;
 use App\Http\Controllers\AuthorPostController;
 use App\Http\Controllers\Author\UploadController as AuthorUploadController;
 use App\Http\Controllers\ProfileAvatarController;
@@ -30,12 +34,40 @@ use App\Http\Controllers\ProfileAvatarController;
 |
 */
 
-Route::get('/', [BlogController::class, 'index'])->name('home');
-Route::get('/posts/{post:slug}', [BlogController::class, 'show'])->name('posts.show');
-Route::get('/categories/{category:slug}', [BlogController::class, 'category'])->name('categories.show');
-Route::get('/archive', [BlogController::class, 'archive'])->name('archive');
-Route::get('/tags/{tag:slug}', [BlogController::class, 'tag'])->name('tags.show');
-Route::get('/about', [BlogController::class, 'about'])->name('blog.about');
+// 前台路由组
+Route::group(['as' => 'blog.'], function () {
+    // 首页
+    Route::get('/', [BlogController::class, 'index'])->name('home');
+    
+    // 内容页面
+    Route::get('/about', [BlogController::class, 'about'])->name('about');
+    Route::get('/archive', [BlogController::class, 'archive'])->name('archive');
+    
+    // 文章模块
+    Route::group(['prefix' => 'articles', 'as' => 'posts.'], function () {
+        Route::get('/{post:slug}', [PostController::class, 'show'])->name('show');
+        
+        // 文章评论 - 查看（公开）
+        Route::get('/{post:slug}/comments', [CommentController::class, 'index'])->name('comments.index');
+        
+        // 文章互动 - 需要登录
+        Route::middleware('auth')->group(function () {
+            // 评论操作
+            Route::post('/{post:slug}/comments', [CommentController::class, 'store'])->name('comments.store');
+            Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
+            
+            // 点赞操作
+            Route::post('/{post:slug}/like', [PostLikeController::class, 'store'])->name('like');
+            Route::delete('/{post:slug}/unlike', [PostLikeController::class, 'destroy'])->name('unlike');
+        });
+    });
+    
+    // 分类页面
+    Route::get('/categories/{category:slug}', [CategoryController::class, 'show'])->name('categories.show');
+    
+    // 标签页面
+    Route::get('/tags/{tag:slug}', [TagController::class, 'show'])->name('tags.show');
+});
 
 Route::middleware([
     'auth:sanctum',
@@ -106,8 +138,8 @@ Route::middleware([
         });
     });
 
-    // 评论路由
-    Route::middleware('auth')->group(function () {
+    // 评论和点赞路由 - 需要登录的部分
+    Route::name('blog.')->group(function () {
         Route::post('/posts/{post:slug}/comments', [CommentController::class, 'store'])->name('posts.comments.store');
         Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
         

@@ -9,11 +9,14 @@ use Inertia\Inertia;
 
 class BlogController extends Controller
 {
-    public function index(Request $request)
+    /**
+     * API方法：获取博客文章列表
+     */
+    public function apiIndex(Request $request)
     {
         $query = Post::with(['author', 'category'])
             ->where('status', 'published')
-            ->whereNotNull('published_at')  // 确保发布时间不为空
+            ->whereNotNull('published_at')
             ->orderBy('published_at', 'desc');
 
         if ($search = $request->input('search')) {
@@ -25,7 +28,7 @@ class BlogController extends Controller
 
         $posts = $query->paginate(9)->withQueryString();
 
-        return Inertia::render('Blog/Index', [
+        return response()->json([
             'posts' => $posts,
             'filters' => [
                 'search' => $search,
@@ -33,10 +36,13 @@ class BlogController extends Controller
         ]);
     }
 
-    public function show(Post $post)
+    /**
+     * API方法：获取文章详情
+     */
+    public function apiShow(Post $post)
     {
         if ($post->status !== 'published' && !auth()->user()?->can('view unpublished posts')) {
-            abort(404);
+            return response()->json(['error' => 'Article not found'], 404);
         }
 
         // 获取访客标识（使用 session id 或 IP 地址）
@@ -103,7 +109,7 @@ class BlogController extends Controller
             ->select('id', 'title', 'slug')
             ->first();
         
-        return Inertia::render('Blog/Show', [
+        return response()->json([
             'post' => $post,
             'relatedPosts' => $relatedPosts,
             'prevPost' => $prevPost,
@@ -111,54 +117,67 @@ class BlogController extends Controller
         ]);
     }
 
-    public function category(Category $category)
+    /**
+     * API方法：获取分类文章
+     */
+    public function apiCategory(Category $category)
     {
         $posts = Post::with(['author', 'category'])
             ->where('category_id', $category->id)
             ->where('status', 'published')
-            ->whereNotNull('published_at')  // 确保发布时间不为空
+            ->whereNotNull('published_at')
             ->orderBy('published_at', 'desc')
             ->paginate(9);
 
-        return Inertia::render('Blog/Category', [
+        return response()->json([
             'category' => $category,
             'posts' => $posts
         ]);
     }
 
-    public function archive()
+    /**
+     * API方法：获取归档数据
+     */
+    public function apiArchive()
     {
         $archives = Post::with(['author', 'category'])
             ->where('status', 'published')
-            ->whereNotNull('published_at')  // 确保发布时间不为空
+            ->whereNotNull('published_at')
             ->orderBy('published_at', 'desc')
             ->get()
             ->groupBy(function($post) {
                 return $post->published_at->format('Y');
             });
 
-        return Inertia::render('Blog/Archive', [
+        return response()->json([
             'archives' => $archives
         ]);
     }
 
-    public function tag(\App\Models\Tag $tag)
+    /**
+     * API方法：获取标签文章
+     */
+    public function apiTag(\App\Models\Tag $tag)
     {
         $posts = Post::with(['author', 'category', 'tags'])
             ->whereHas('tags', function($query) use ($tag) {
                 $query->where('tags.id', $tag->id);
             })
             ->where('status', 'published')
-            ->latest('published_at')
+            ->whereNotNull('published_at')
+            ->orderBy('published_at', 'desc')
             ->paginate(9);
 
-        return Inertia::render('Blog/Tag', [
+        return response()->json([
             'tag' => $tag,
             'posts' => $posts
         ]);
     }
 
-    public function about()
+    /**
+     * API方法：获取关于页面数据
+     */
+    public function apiAbout()
     {
         $about = [
             'name' => '花生',
@@ -220,7 +239,7 @@ class BlogController extends Controller
             ]
         ];
 
-        return Inertia::render('Blog/About', [
+        return response()->json([
             'about' => $about
         ]);
     }

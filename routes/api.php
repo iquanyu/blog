@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\Api\PostController;
+use App\Http\Controllers\BlogController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,8 +25,29 @@ Route::get('/search', [SearchController::class, 'search'])->name(name: 'api.sear
 Route::get('/global-search', [SearchController::class, 'globalSearch'])->name('api.global-search');
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/posts', [PostController::class, 'index']);
-    Route::get('/posts/{post:slug}', [PostController::class, 'show']);
     Route::post('/posts/{post:slug}/like', [PostController::class, 'toggleLike']);
     Route::post('/posts/{post:slug}/subscribe', [PostController::class, 'toggleSubscribe']);
+});
+
+// 文章相关API
+Route::get('/posts', [PostController::class, 'index'])->name('api.posts.index');
+Route::get('/posts/{post:slug}', [PostController::class, 'show'])->name('api.posts.show');
+
+// 前端功能API（使用原始控制器）
+Route::prefix('blog')->group(function () {
+    // 博客首页
+    Route::get('/', [BlogController::class, 'apiIndex'])->name('api.blog.index');
+    
+    // 内容页面
+    Route::get('/about', [BlogController::class, 'apiAbout'])->name('api.blog.about');
+    Route::get('/archive', [BlogController::class, 'apiArchive'])->name('api.blog.archive');
+    
+    // 文章详情
+    Route::get('/posts/{post:slug}', [BlogController::class, 'apiShow'])->name('api.blog.posts.show');
+    
+    // 分类页面
+    Route::get('/categories/{category:slug}', [BlogController::class, 'apiCategory'])->name('api.blog.categories.show');
+    
+    // 标签页面
+    Route::get('/tags/{tag:slug}', [BlogController::class, 'apiTag'])->name('api.blog.tags.show');
 });

@@ -89,6 +89,11 @@ class Post extends Model
                 return;
             }
 
+            // 如果用户未登录，则跳过创建修订版本
+            if (!auth()->check()) {
+                return;
+            }
+
             // 检查是否有实质性内容变化
             $hasContentChanges = $post->isDirty(['content', 'title', 'excerpt', 'status', 'category_id']);
             

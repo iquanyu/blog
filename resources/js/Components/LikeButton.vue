@@ -42,7 +42,7 @@ const toggleLike = async () => {
     const originalLikesCount = likesCount.value
     
     try {
-        const url = route(isLiked.value ? 'posts.unlike' : 'posts.like', props.post.slug)
+        const url = route(isLiked.value ? 'blog.posts.unlike' : 'blog.posts.like', props.post.slug)
         const method = isLiked.value ? 'delete' : 'post'
         
         // 先更新UI状态

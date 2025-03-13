@@ -34,7 +34,7 @@ defineProps({
                         <article v-for="post in posts.data" :key="post.id" class="relative">
                             <div class="group relative">
                                 <h3 class="text-lg font-semibold leading-6 text-gray-900 dark:text-white group-hover:text-gray-600 dark:group-hover:text-gray-300">
-                                    <Link :href="route('posts.show', post.slug)">
+                                    <Link :href="route('blog.posts.show', post.slug)">
                                         {{ post.title }}
                                     </Link>
                                 </h3>

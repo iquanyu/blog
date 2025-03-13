@@ -8,27 +8,53 @@ use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
-        // 创建管理员用户
-        // $admin = User::factory()->create([
-        //     'name' => '管理员',
-        //     'email' => 'admin@example.com',
-        //     'password' => Hash::make('password'),
-        // ]);
-        // $admin->assignRole('admin');
+        $this->command->info('开始创建用户...');
 
-        // 创建编辑用户
-        $editor = User::factory()->create([
-            'name' => '编辑',
-            'email' => 'editor@example.com',
+        // 创建超级管理员
+        $this->command->info('创建超级管理员...');
+        $admin = User::factory()->create([
+            'name' => 'Admin',
+            'email' => 'admin@example.com',
             'password' => Hash::make('password'),
+            'email_verified_at' => now(),
         ]);
-        $editor->assignRole('editor');
+        $admin->assignRole('super-admin');
 
-        // 创建多个作者用户
-        User::factory()->count(5)->create()->each(function ($user) {
-            $user->assignRole('creator');
-        });
+        // 创建编辑
+        $this->command->info('创建编辑...');
+        $editors = User::factory(3)->create();
+        foreach ($editors as $editor) {
+            $editor->assignRole('editor');
+        }
+
+        // 创建作者
+        $this->command->info('创建作者...');
+        $authors = User::factory(10)->create();
+        foreach ($authors as $author) {
+            $author->assignRole('author');
+        }
+
+        // 创建普通用户
+        $this->command->info('创建普通用户...');
+        $users = User::factory(20)->create();
+        foreach ($users as $user) {
+            $user->assignRole('normal-user');
+        }
+
+        // 创建未验证用户
+        $this->command->info('创建未验证用户...');
+        $unverifiedUsers = User::factory(5)
+            ->unverified()
+            ->create();
+        foreach ($unverifiedUsers as $user) {
+            $user->assignRole('normal-user');
+        }
+
+        $this->command->info('用户创建完成！');
     }
 } 

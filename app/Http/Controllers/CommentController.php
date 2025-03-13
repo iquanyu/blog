@@ -21,7 +21,7 @@ class CommentController extends Controller
             'parent_id' => $validated['parent_id'] ?? null
         ]);
 
-        return redirect(route('posts.show', $post->slug) . '#comment-' . $comment->id)
+        return redirect(route('blog.posts.show', $post->slug) . '#comment-' . $comment->id)
             ->with('message', '评论发布成功！');
     }
 

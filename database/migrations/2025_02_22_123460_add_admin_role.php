@@ -41,9 +41,15 @@ return new class extends Migration
     public function down()
     {
         // 删除角色和权限
-        $role = Role::findByName('admin');
-        if ($role) {
-            $role->delete();
+        try {
+            // 尝试查找并删除admin角色
+            if (Role::where('name', 'admin')->exists()) {
+                $role = Role::findByName('admin');
+                $role->delete();
+            }
+        } catch (\Exception $e) {
+            // 记录错误但继续执行
+            \Log::warning("无法删除admin角色: " . $e->getMessage());
         }
 
         $permissions = [
@@ -56,9 +62,14 @@ return new class extends Migration
         ];
 
         foreach ($permissions as $permission) {
-            $permission = Permission::findByName($permission);
-            if ($permission) {
-                $permission->delete();
+            try {
+                $permission = Permission::findByName($permission);
+                if ($permission) {
+                    $permission->delete();
+                }
+            } catch (\Exception $e) {
+                // 记录错误但继续执行
+                \Log::warning("无法删除权限 {$permission}: " . $e->getMessage());
             }
         }
     }

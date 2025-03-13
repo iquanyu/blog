@@ -35,14 +35,14 @@ defineProps({
                                             </time>
                                             <div>
                                                 <h3 class="text-base font-semibold text-gray-900 dark:text-white">
-                                                    <Link :href="route('posts.show', post.slug)" class="hover:text-gray-600 dark:hover:text-gray-300">
+                                                    <Link :href="route('blog.posts.show', post.slug)" class="hover:text-gray-600 dark:hover:text-gray-300">
                                                         {{ post.title }}
                                                     </Link>
                                                 </h3>
                                                 <div class="mt-1 flex gap-x-2.5 text-sm text-gray-500 dark:text-gray-400">
                                                     <div v-if="post.category" class="flex gap-x-2.5">
                                                         <Link 
-                                                            :href="route('categories.show', post.category.slug)"
+                                                            :href="route('blog.categories.show', post.category.slug)"
                                                             class="hover:text-gray-900 dark:hover:text-white"
                                                         >
                                                             {{ post.category.name }}

@@ -12,6 +12,10 @@ class CreateTagsTable extends Migration
             $table->id();
             $table->string('name');
             $table->string('slug')->unique();
+            $table->text('description')->nullable();
+            $table->boolean('is_visible')->default(true);
+            $table->string('meta_title')->nullable();
+            $table->text('meta_description')->nullable();
             $table->timestamps();
         });
     }

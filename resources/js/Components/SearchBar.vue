@@ -99,7 +99,7 @@ const handleKeydown = (e) => {
         e.preventDefault()
         const selected = results.value.posts[selectedIndex.value]
         if (selected) {
-            router.visit(route('posts.show', selected.slug))
+            router.visit(route('blog.posts.show', selected.slug))
             closeSearch()
         }
     }
@@ -133,10 +133,10 @@ const showInitialState = computed(() => {
 
 const handleResultClick = (result) => {
     if (results.value.posts.includes(result)) {
-        router.visit(route('posts.show', result.slug))
+        router.visit(route('blog.posts.show', result.slug))
     } 
     else if (results.value.categories.includes(result)) {
-        router.visit(route('categories.show', result.slug))
+        router.visit(route('blog.categories.show', result.slug))
     }
     closeSearch()
 }

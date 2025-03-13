@@ -41,11 +41,11 @@ class SearchController extends Controller
                         'type' => 'post',
                         'title' => $post->title,
                         'excerpt' => Str::limit(strip_tags($post->content), 100),
-                        'url' => route('posts.show', $post->slug),
+                        'url' => route('blog.posts.show', $post->slug),
                         'slug' => $post->slug,
                         'category' => $post->category ? [
                             'name' => $post->category->name,
-                            'url' => route('categories.show', $post->category->slug)
+                            'url' => route('blog.categories.show', $post->category->slug)
                         ] : null,
                         'author' => [
                             'name' => $post->author->name,
@@ -64,7 +64,7 @@ class SearchController extends Controller
                         'id' => $category->id,
                         'type' => 'category',
                         'name' => $category->name,
-                        'url' => route('categories.show', $category->slug),
+                        'url' => route('blog.categories.show', $category->slug),
                         'slug' => $category->slug,
                         'description' => $category->description
                     ];
@@ -79,7 +79,7 @@ class SearchController extends Controller
                         'id' => $tag->id,
                         'type' => 'tag',
                         'name' => $tag->name,
-                        'url' => route('tags.show', $tag->slug)
+                        'url' => route('blog.tags.show', $tag->slug)
                     ];
                 });
 

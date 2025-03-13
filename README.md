@@ -2,72 +2,90 @@
 
 ## 博客系统
 
-一个基于 Laravel 10、Inertia 和 Vue 3 的现代博客系统。
+这是一个基于Laravel和Vue.js构建的现代博客系统。
 
----
+## 项目架构
 
-## 安装和运行
+本项目采用前后端分离的架构设计：
 
-1. 克隆项目：
-   ```bash
-   git clone <项目地址>
-   cd <项目目录>
-   ```
+### 前端架构
+- 使用Inertia.js作为前端渲染引擎，结合Vue.js组件
+- 前端控制器位于`App\Http\Controllers\Frontend`命名空间下
+- 前端页面位于`resources/js/Pages`目录
 
-2. 安装依赖：
-   ```bash
-   composer install
-   npm install
-   ```
+### 后端架构
+- API控制器位于`App\Http\Controllers`根命名空间下
+- 管理后台控制器位于`App\Http\Controllers\Admin`命名空间下
+- 作者相关控制器位于`App\Http\Controllers\Author`命名空间下
 
-3. 设置环境变量：
-   复制 `.env.example` 文件为 `.env`，并配置数据库等信息。
-   ```bash
-   cp .env.example .env
-   ```
+### 路由设计
+- 前端路由：使用`Frontend`命名空间下的控制器，返回Inertia视图
+- API路由：使用根命名空间下的控制器，返回JSON响应
+- 管理后台路由：使用`Admin`命名空间下的控制器，返回Inertia视图
 
-4. 生成应用密钥：
-   ```bash
-   php artisan key:generate
-   ```
+## 功能特点
 
-5. 运行数据库迁移：
-   ```bash
-   php artisan migrate
-   ```
+- 文章管理：发布、编辑、删除文章
+- 分类管理：创建和管理文章分类
+- 标签管理：为文章添加标签
+- 用户管理：管理用户权限和角色
+- 评论系统：用户可以对文章发表评论
+- 点赞功能：用户可以对文章点赞
 
-6. 启动开发服务器：
-   ```bash
-   php artisan serve
-   npm run dev
-   ```
+## 安装步骤
 
----
+1. 克隆仓库
+```
+git clone <repository-url>
+```
 
-## 功能特性
-- 用户注册和登录
-- 文章管理（创建、编辑、删除、查看）
-- 评论功能
-- 标签和分类管理
-- 文章归档
-- 文章版本历史
+2. 安装依赖
+```
+composer install
+npm install
+```
 
----
+3. 配置环境
+```
+cp .env.example .env
+php artisan key:generate
+```
 
-## 使用示例
-访问 [http://localhost:8000](http://localhost:8000) 来查看博客系统。
+4. 配置数据库
+在`.env`文件中设置数据库连接信息
 
----
+5. 运行迁移和填充数据
+```
+php artisan migrate --seed
+```
+
+6. 编译前端资源
+```
+npm run dev
+```
+
+7. 启动服务器
+```
+php artisan serve
+```
+
+## 开发指南
+
+### 添加新的前端页面
+
+1. 在`resources/js/Pages`目录下创建Vue组件
+2. 在`Frontend`命名空间下的控制器中添加对应的方法
+3. 在`routes/web.php`中添加路由
+
+### 添加新的API端点
+
+1. 在根命名空间的控制器中添加API方法
+2. 在`routes/api.php`中添加路由
 
 ## 贡献指南
-欢迎贡献！请遵循以下步骤：
-1. Fork 本项目
-2. 创建您的特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交您的更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 创建一个新的 Pull Request
 
----
+欢迎提交Pull Request或Issue来改进这个项目。
 
 ## 许可证
-本项目使用 MIT 许可证。
+
+本项目采用MIT许可证。

@@ -26,13 +26,13 @@ defineProps({
 
 <template>
     <article class="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700/50 shadow-sm hover:shadow-md hover:border-gray-200 dark:hover:border-gray-700 transition-all duration-300">
-        <Link :href="route('posts.show', post.slug)" class="block">
+        <Link :href="route('blog.posts.show', post.slug)" class="block">
             <div v-if="post.featured_image && showImage" class="aspect-w-16 aspect-h-9">
                 <img :src="post.featured_image" :alt="post.title" class="object-cover w-full h-full" />
             </div>
             <div class="p-4">
                 <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2">
-                    <Link :href="route('categories.show', post.category.slug)" 
+                    <Link :href="route('blog.categories.show', post.category.slug)" 
                         class="bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-full hover:bg-orange-100 dark:hover:bg-orange-900/50 border border-orange-100 dark:border-orange-500/20">
                         {{ post.category.name }}
                     </Link>

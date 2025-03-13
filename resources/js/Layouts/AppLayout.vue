@@ -22,12 +22,12 @@ const user = computed(() => page.props.auth.user);
 const isLoggedIn = computed(() => !!user.value);
 
 const navigation = computed(() => [
-    { name: '首页', href: route('home') },
+    { name: '首页', href: route('blog.home') },
     ...page.props.categories.map(category => ({
         name: category.name,
-        href: route('categories.show', category.slug)
+        href: route('blog.categories.show', category.slug)
     })),
-    { name: '归档', href: route('archive') },
+    { name: '归档', href: route('blog.archive') },
     { name: '关于', href: route('blog.about') },
 ]);
 

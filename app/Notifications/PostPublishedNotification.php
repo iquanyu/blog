@@ -28,7 +28,7 @@ class PostPublishedNotification extends Notification
         return (new MailMessage)
             ->subject('文章已发布：' . $this->post->title)
             ->line('您的文章已成功发布！')
-            ->action('查看文章', route('posts.show', $this->post->slug))
+            ->action('查看文章', route('blog.posts.show', $this->post->slug))
             ->line('感谢您的贡献！');
     }
 

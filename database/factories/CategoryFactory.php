@@ -2,14 +2,18 @@
 
 namespace Database\Factories;
 
+use App\Models\Category;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Config;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Category>
  */
 class CategoryFactory extends Factory
 {
+    protected $model = Category::class;
+
     /**
      * Define the model's default state.
      *
@@ -17,19 +21,56 @@ class CategoryFactory extends Factory
      */
     public function definition(): array
     {
-        $categories = [
-            '技术' => ['slug' => 'technology', 'desc' => '最新的技术文章和教程'],
-            '设计' => ['slug' => 'design', 'desc' => '设计理念和用户体验'],
-            '开发' => ['slug' => 'development', 'desc' => '开发经验和最佳实践'],
-            '产品' => ['slug' => 'product', 'desc' => '产品思考和案例分析'],
-            '团队' => ['slug' => 'team', 'desc' => '团队管理和工作方式'],
-        ];
+        $categories = Config::get('content.categories');
+        $name = $this->faker->randomElement(array_keys($categories));
+        $category = $categories[$name];
         
-        $name = array_rand($categories);
         return [
             'name' => $name,
-            'slug' => $categories[$name]['slug'],
-            'description' => $categories[$name]['desc'],
+            'slug' => $category['slug'],
+            'description' => $category['desc'],
+            'parent_id' => null,
+            'order' => $this->faker->numberBetween(1, 100),
+            'is_visible' => true,
+            'meta_title' => $name,
+            'meta_description' => $category['desc'],
         ];
+    }
+
+    public function withParent(Category $parent): static
+    {
+        return $this->state(function (array $attributes) use ($parent) {
+            return [
+                'parent_id' => $parent->id,
+            ];
+        });
+    }
+
+    public function hidden(): static
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'is_visible' => false,
+            ];
+        });
+    }
+
+    public function ordered(int $order): static
+    {
+        return $this->state(function (array $attributes) use ($order) {
+            return [
+                'order' => $order,
+            ];
+        });
+    }
+
+    public function withMeta(string $title, string $description): static
+    {
+        return $this->state(function (array $attributes) use ($title, $description) {
+            return [
+                'meta_title' => $title,
+                'meta_description' => $description,
+            ];
+        });
     }
 }

@@ -36,7 +36,7 @@ const submitComment = () => {
         return
     }
 
-    form.post(route('posts.comments.store', props.post.slug), {
+    form.post(route('blog.posts.comments.store', props.post.slug), {
         preserveScroll: true,
         onSuccess: () => {
             form.reset()
@@ -74,7 +74,7 @@ const deleteComment = (comment) => {
 // 确认删除
 const confirmDelete = () => {
     if (commentToDelete.value) {
-        router.delete(route('comments.destroy', commentToDelete.value.id), {
+        router.delete(route('blog.comments.destroy', commentToDelete.value.id), {
             preserveScroll: true,
             onSuccess: () => {
                 showDeleteDialog.value = false
@@ -256,33 +256,38 @@ const goToLogin = () => {
                             <!-- 回复指示线 -->
                             <div class="absolute left-0 top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-700"></div>
                             <!-- 回复连接线 -->
-                            <div class="absolute -left-0 top-6 h-px w-6 bg-gray-200 dark:bg-gray-700"></div>
+                            <div class="absolute -left-6 top-6 h-px w-6 bg-gray-200 dark:bg-gray-700"></div>
                             
+                            <!-- 回复表单 -->
                             <div class="relative rounded-lg bg-gray-50/50 p-4 dark:bg-gray-800/30">
-                                <div class="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                                    回复 {{ replyingTo.user.name }}：
-                                </div>
-                                <textarea
-                                    v-model="form.content"
-                                    class="block w-full resize-none rounded-md border-0 bg-white px-3 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-900 dark:bg-gray-900 dark:text-white dark:ring-gray-700 dark:focus:ring-gray-600 sm:text-sm sm:leading-6"
-                                    rows="2"
-                                    placeholder="写下你的回复..."
-                                ></textarea>
-                                <div class="mt-2 flex justify-end gap-2">
-                                    <button
-                                        @click="cancelReply"
-                                        class="rounded-md px-2 py-1 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-                                    >
-                                        取消
-                                    </button>
-                                    <button
-                                        @click="submitComment"
-                                        :disabled="form.processing || !form.content"
-                                        class="rounded-md bg-gray-900 px-2 py-1 text-sm text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:hover:bg-gray-600"
-                                    >
-                                        {{ form.processing ? '发布中...' : '发布回复' }}
-                                    </button>
-                                </div>
+                                <form @submit.prevent="submitComment" class="space-y-4">
+                                    <textarea
+                                        v-model="form.content"
+                                        :placeholder="`回复 ${replyingTo.user.name}...`"
+                                        class="block w-full resize-none rounded-md border-0 bg-transparent text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:text-white dark:ring-gray-600 dark:focus:ring-indigo-500 sm:py-1.5 sm:text-sm sm:leading-6"
+                                        rows="2"
+                                    ></textarea>
+                                    <div class="flex justify-end gap-2">
+                                        <button
+                                            type="button"
+                                            @click="cancelReply"
+                                            class="rounded-md px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:text-white dark:ring-gray-700 dark:hover:bg-gray-800"
+                                        >
+                                            取消
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            :disabled="form.processing || !form.content"
+                                            class="rounded-md bg-indigo-600 px-2.5 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-indigo-500 dark:hover:bg-indigo-400"
+                                        >
+                                            <svg v-if="form.processing" class="mr-1.5 h-4 w-4 animate-spin" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                                            </svg>
+                                            <span>{{ form.processing ? '回复中...' : '发送回复' }}</span>
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -299,23 +304,26 @@ const goToLogin = () => {
         </div>
 
         <!-- 删除确认对话框 -->
-        <ConfirmDialog
+        <confirm-dialog
             :show="showDeleteDialog"
+            @confirm="confirmDelete"
+            @cancel="cancelDelete"
             title="删除评论"
             content="确定要删除这条评论吗？此操作无法撤销。"
-            @close="cancelDelete"
-            @confirm="confirmDelete"
+            confirm-button-text="删除"
+            cancel-button-text="取消"
+            confirm-button-class="bg-red-600 hover:bg-red-500"
         />
 
         <!-- 登录提示对话框 -->
-        <ConfirmDialog
+        <confirm-dialog
             :show="showLoginDialog"
-            title="登录提示"
-            content="登录后即可发表评论，是否前往登录？"
-            confirm-text="去登录"
-            cancel-text="取消"
-            @close="showLoginDialog = false"
             @confirm="goToLogin"
+            @cancel="showLoginDialog = false"
+            title="需要登录"
+            content="请先登录后再发表评论。"
+            confirm-button-text="去登录"
+            cancel-button-text="取消"
         />
     </div>
 </template>

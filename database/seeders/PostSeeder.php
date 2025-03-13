@@ -7,72 +7,93 @@ use App\Models\User;
 use App\Models\Category;
 use App\Models\Tag;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class PostSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
-        // 获取已存在的用户和分类
         $users = User::all();
-        if ($users->isEmpty()) {
-            throw new \Exception('请先创建用户再运行 PostSeeder');
-        }
-
         $categories = Category::all();
-        if ($categories->isEmpty()) {
-            throw new \Exception('请先创建分类再运行 PostSeeder');
-        }
-
         $tags = Tag::all();
-        if ($tags->isEmpty()) {
-            throw new \Exception('请先创建标签再运行 PostSeeder');
-        }
 
-        // 为每个分类创建文章
-        foreach ($categories as $category) {
-            // 创建已发布的文章
-            $this->createPostsForCategory($category, $users, $tags, 10, isPublished: true);
-            
-            // 创建草稿文章
-            $this->createPostsForCategory($category, $users, $tags, 3, false);
-        }
-    }
+        // 批量创建文章
+        $this->command->info('创建文章...');
+        $posts = collect();
 
-    private function createPostsForCategory(Category $category, $users, $tags, $count, $isPublished)
-    {
-        $startDate = now()->subMonths(6);
-        $endDate = now();
+        // 创建精选文章（全部已发布）
+        $posts = $posts->merge(
+            Post::factory(2)
+                ->featured()
+                ->recent()
+                ->published()
+                ->create()
+                ->each(function ($post) use ($users, $categories, $tags) {
+                    $post->author()->associate($users->random());
+                    $post->category()->associate($categories->random());
+                    $post->tags()->attach($tags->random(rand(2, 3)));
+                    $post->status = 'published';
+                    $post->save();
+                })
+        );
 
-        for ($i = 0; $i < $count; $i++) {
-            // 生成随机的创建时间，确保时间分布均匀
-            $createdAt = Carbon::createFromTimestamp(
-                rand($startDate->timestamp, $endDate->timestamp)
-            );
+        // 创建热门文章（全部已发布）
+        $posts = $posts->merge(
+            Post::factory(3)
+                ->popular()
+                ->recent()
+                ->published()
+                ->create()
+                ->each(function ($post) use ($users, $categories, $tags) {
+                    $post->author()->associate($users->random());
+                    $post->category()->associate($categories->random());
+                    $post->tags()->attach($tags->random(rand(2, 3)));
+                    $post->status = 'published';
+                    $post->save();
+                })
+        );
 
-            // 创建文章
-            $post = Post::factory()->create([
-                'category_id' => $category->id,
-                'author_id' => $users->random()->id,
-                'created_at' => $createdAt,
-                'updated_at' => $createdAt->copy()->addDays(rand(1, 30)),
-                'status' => $isPublished ? 'published' : 'draft',
-                'published_at' => $isPublished ? $createdAt : null,
-                'views' => $isPublished ? rand(100, 10000) : rand(0, 100)
-            ]);
+        // 创建草稿文章
+        $posts = $posts->merge(
+            Post::factory(2)
+                ->draft()
+                ->create()
+                ->each(function ($post) use ($users, $categories, $tags) {
+                    $post->author()->associate($users->random());
+                    $post->category()->associate($categories->random());
+                    $post->tags()->attach($tags->random(rand(2, 3)));
+                    $post->status = 'draft';
+                    $post->save();
+                })
+        );
 
-            // 添加标签（已发布的文章添加更多标签）
-            $tagCount = $isPublished ? rand(3, 5) : rand(1, 3);
-            $post->tags()->attach(
-                $tags->random($tagCount)->pluck('id')->toArray()
-            );
+        // 创建普通文章（90%已发布）
+        $posts = $posts->merge(
+            Post::factory(5)
+                ->published()
+                ->create()
+                ->each(function ($post) use ($users, $categories, $tags) {
+                    $post->author()->associate($users->random());
+                    $post->category()->associate($categories->random());
+                    $post->tags()->attach($tags->random(rand(2, 3)));
+                    $post->status = 'published';
+                    $post->save();
+                })
+        );
 
-            // 如果是已发布文章，增加一些随机的点赞
-            if ($isPublished) {
-                $likeCount = rand(5, 50);
-                $likeUsers = $users->random(min($likeCount, $users->count()));
-                $post->likes()->attach($likeUsers);
-            }
+        // 批量更新文章统计
+        $this->command->info('更新文章统计...');
+        $categoryCounts = $posts->groupBy('category_id')
+            ->map->count()
+            ->toArray();
+
+        foreach ($categoryCounts as $categoryId => $count) {
+            DB::table('categories')
+                ->where('id', $categoryId)
+                ->update(['post_count' => $count]);
         }
     }
 } 

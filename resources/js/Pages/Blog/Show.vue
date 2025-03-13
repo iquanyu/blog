@@ -10,6 +10,7 @@ import ImageViewer from '@/Components/ImageViewer.vue'
 import ShareButton from '@/Components/ShareButton.vue'
 import { ChatBubbleLeftIcon } from '@heroicons/vue/24/outline'
 import PostCard from '@/Components/PostCard.vue'
+import EnhancedMarkdownRenderer from '@/Components/EnhancedMarkdownRenderer.vue'
 
 // 添加日期格式化函数
 const formatDate = (dateString) => {
@@ -52,12 +53,12 @@ onMounted(() => {
     setupGestures(document.body, {
         onSwipeLeft: () => {
             if (props.nextPost) {
-                window.location.href = route('posts.show', props.nextPost.slug)
+                window.location.href = route('blog.posts.show', props.nextPost.slug)
             }
         },
         onSwipeRight: () => {
             if (props.prevPost) {
-                window.location.href = route('posts.show', props.prevPost.slug)
+                window.location.href = route('blog.posts.show', props.prevPost.slug)
             }
         }
     })
@@ -67,63 +68,26 @@ const scrollToComments = () => {
     document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth' })
 }
 
-// 修改处理文章内容中的图片的方法
-const processContent = computed(() => {
-    if (!props.post.content) return ''
-    
-    // 使用 DOMParser 解析 HTML 内容
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(props.post.content, 'text/html')
-    
-    // 处理所有图片
-    doc.querySelectorAll('img').forEach(img => {
-        const wrapper = document.createElement('div')
-        wrapper.className = 'my-4 relative'
-        wrapper.setAttribute('v-lazyload', '')
-        
-        const newImg = document.createElement('img')
-        newImg.setAttribute('data-src', img.src)
-        newImg.alt = img.alt || ''
-        newImg.className = 'rounded-lg opacity-0 transition-opacity duration-300'
-        
-        // 添加加载错误处理
-        newImg.setAttribute('onerror', `this.onerror=null;this.parentElement.classList.add('error');`)
-        
-        // 添加加载状态容器
-        const loadingContainer = document.createElement('div')
-        loadingContainer.className = 'absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800'
-        
-        // 添加加载动画
-        const loader = document.createElement('div')
-        loader.className = 'loading-indicator'
-        loader.innerHTML = `
-            <svg class="h-8 w-8 animate-spin text-gray-400" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-            </svg>
-        `
-        
-        // 添加错误提示
-        const errorMessage = document.createElement('div')
-        errorMessage.className = 'error-message hidden absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800'
-        errorMessage.innerHTML = `
-            <div class="text-center">
-                <svg class="mx-auto h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                </svg>
-                <p class="mt-2 text-sm text-gray-500">图片加载失败</p>
-            </div>
-        `
-        
-        loadingContainer.appendChild(loader)
-        wrapper.appendChild(newImg)
-        wrapper.appendChild(loadingContainer)
-        wrapper.appendChild(errorMessage)
-        img.parentNode.replaceChild(wrapper, img)
-    })
-    
-    return doc.body.innerHTML
+// 移除之前的内容处理方法，因为我们的新组件会处理所有情况
+// 检查内容是否为JSON对象文本
+const isJsonContent = computed(() => {
+    const content = typeof props.post.content === 'string' 
+        ? props.post.content 
+        : JSON.stringify(props.post.content || '');
+    return content.startsWith('{') && content.endsWith('}') || 
+           content.startsWith('[{') && content.endsWith('}]');
 })
+
+// 是否启用调试模式
+const enableDebug = ref(false);
+
+// 切换调试模式
+const toggleDebug = () => {
+    enableDebug.value = !enableDebug.value;
+}
+
+// 添加开发环境标志
+const isDevelopment = ref(import.meta.env ? import.meta.env.DEV : false);
 </script>
 
 <template>
@@ -144,7 +108,7 @@ const processContent = computed(() => {
                     <span>·</span>
                     <time :datetime="post.published_at">{{ formatDate(post.published_at) }}</time>
                     <span>·</span>
-                    <Link :href="route('categories.show', post.category.slug)" class="hover:text-orange-500">
+                    <Link :href="route('blog.categories.show', post.category.slug)" class="hover:text-orange-500">
                         {{ post.category.name }}
                     </Link>
                 </div>
@@ -155,7 +119,26 @@ const processContent = computed(() => {
                 <div v-if="post.featured_image" class="mb-8">
                     <img :src="post.featured_image" :alt="post.title" class="w-full rounded-lg shadow-lg" />
                 </div>
-                <div v-html="processContent"></div>
+                
+                <!-- 使用增强的Markdown渲染器 -->
+                <div v-if="!post.content" class="text-yellow-500 mb-4 p-4 bg-yellow-50 dark:bg-yellow-900 rounded-lg">
+                    <p class="font-medium">提示：该文章暂无内容</p>
+                </div>
+                
+                <EnhancedMarkdownRenderer 
+                    v-else
+                    :content="post.content"
+                    :debug="enableDebug"
+                />
+                
+                <!-- 开发环境下的调试按钮 -->
+                <button 
+                    v-if="isDevelopment" 
+                    @click="toggleDebug" 
+                    class="text-xs bg-gray-200 dark:bg-gray-800 px-2 py-1 rounded mt-2"
+                >
+                    {{ enableDebug ? '关闭' : '开启' }}调试模式
+                </button>
             </article>
 
             <!-- 文章底部 -->
@@ -165,7 +148,7 @@ const processContent = computed(() => {
                     <Link
                         v-for="tag in post.tags"
                         :key="tag.id"
-                        :href="route('tags.show', tag.slug)"
+                        :href="route('blog.tags.show', tag.slug)"
                         class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-800 hover:bg-orange-100 hover:text-orange-800 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-orange-900 dark:hover:text-orange-200"
                     >
                         {{ tag.name }}
@@ -229,7 +212,12 @@ const processContent = computed(() => {
     opacity: 1;
 }
 
-/* 添加图片容器样式 */
+/* Markdown渲染器样式调整 */
+:deep(.markdown-content) {
+    @apply text-gray-900 dark:text-gray-100;
+}
+
+/* 保留原有样式 */
 :deep(.prose .my-4) {
     position: relative;
     margin-top: 1rem;
@@ -254,5 +242,15 @@ const processContent = computed(() => {
 
 :deep(.prose .my-4.error) img {
     display: none;
+}
+
+/* 添加代码块样式增强 */
+:deep(.markdown-content pre) {
+    border-radius: 0.5rem;
+    margin: 1.5rem 0;
+}
+
+:deep(.markdown-content code) {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 </style> 
