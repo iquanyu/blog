@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Category;
+use App\Models\Tag;
 
 class AuthorPostController extends Controller
 {
@@ -65,12 +67,18 @@ class AuthorPostController extends Controller
 
     public function edit(Post $post)
     {
-        $this->authorize('update', $post);
-
+        // 检查是否为作者本人
+        if (auth()->id() !== $post->author_id && !auth()->user()->can('manage posts')) {
+            abort(403, '您没有编辑此文章的权限');
+        }
+        
+        $post->load(['category', 'tags']);
+        
         return Inertia::render('Author/Posts/Edit', [
-            'post' => $post->load(['category', 'tags', 'revisions.user']),
-            'categories' => \App\Models\Category::all(),
-            'tags' => \App\Models\Tag::all()
+            'post' => $post,
+            'categories' => Category::orderBy('name')->get(),
+            'tags' => Tag::orderBy('name')->get(),
+            'editorMode' => 'full', // 添加编辑器模式标识
         ]);
     }
 
@@ -144,8 +152,9 @@ class AuthorPostController extends Controller
     public function create()
     {
         return Inertia::render('Author/Posts/Create', [
-            'categories' => \App\Models\Category::all(),
-            'tags' => \App\Models\Tag::all()
+            'categories' => Category::orderBy('name')->get(),
+            'tags' => Tag::orderBy('name')->get(),
+            'editorMode' => 'full', // 添加编辑器模式标识
         ]);
     }
 

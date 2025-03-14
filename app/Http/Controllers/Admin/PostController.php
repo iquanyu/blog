@@ -180,9 +180,10 @@ class PostController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Admin/Posts/PostForm', [
-            'post' => new Post(),  // 空的文章对象
-            'categories' => Category::select('id', 'name')->get()
+        return Inertia::render('Admin/Posts/Create', [
+            'categories' => Category::orderBy('name')->get(),
+            'tags' => Tag::orderBy('name')->get(),
+            'editorMode' => 'full',
         ]);
     }
 
@@ -287,9 +288,13 @@ class PostController extends Controller
      */
     public function edit(Post $post)
     {
-        return Inertia::render('Admin/Posts/PostForm', [
-            'post' => $post->load('category'),
-            'categories' => Category::select('id', 'name')->get()
+        $post->load(['tags']);
+        
+        return Inertia::render('Admin/Posts/Edit', [
+            'post' => $post,
+            'categories' => Category::orderBy('name')->get(),
+            'tags' => Tag::orderBy('name')->get(),
+            'editorMode' => 'full',
         ]);
     }
 

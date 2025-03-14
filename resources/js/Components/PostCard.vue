@@ -32,9 +32,9 @@ defineProps({
             </div>
             <div class="p-4">
                 <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2">
-                    <Link :href="route('blog.categories.show', post.category.slug)" 
+                    <Link v-if="post.category" :href="route('blog.categories.show', post.category.slug)" 
                         class="bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-full hover:bg-orange-100 dark:hover:bg-orange-900/50 border border-orange-100 dark:border-orange-500/20">
-                        {{ post.category.name }}
+                        {{ post.category?.name }}
                     </Link>
                     <div class="flex items-center">
                         <ClockIcon class="w-4 h-4 mr-1" />

@@ -52,6 +52,28 @@ const navigation = [
         href: route('admin.users.index'),
         icon: 'M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z',
         matchRoutes: ['admin.users.']
+    },
+    {
+        name: '权限管理',
+        icon: 'M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z',
+        submenu: [
+            {
+                name: '角色权限',
+                href: route('admin.permissions.index'),
+                matchRoutes: ['admin.permissions.index']
+            },
+            {
+                name: '用户角色',
+                href: route('admin.permissions.users'),
+                matchRoutes: ['admin.permissions.users']
+            },
+            {
+                name: '临时权限',
+                href: route('admin.permissions.temporary'),
+                matchRoutes: ['admin.permissions.temporary']
+            }
+        ],
+        matchRoutes: ['admin.permissions.']
     }
 ]
 
@@ -65,7 +87,7 @@ const teams = [
 // 用户菜单
 const userNavigation = [
     { name: '个人资料', href: route('profile.show') },
-    { name: '返回前台', href: route('home') },
+    { name: '返回前台', href: route('blog.home') },
     { name: '退出登录', href: route('logout'), method: 'post' }
 ]
 
@@ -107,8 +129,33 @@ const onKeydown = (event) => {
     }
 }
 
+const submenuOpen = ref({})
+
+// 切换子菜单显示状态
+const toggleSubmenu = (index) => {
+    submenuOpen.value = {
+        ...submenuOpen.value,
+        [index]: !submenuOpen.value[index]
+    }
+}
+
+// 检查子菜单是否应该展开
+const shouldExpandSubmenu = (item) => {
+    if (!item.submenu) return false
+    
+    // 如果当前路由匹配子菜单中的任何一个路由，展开子菜单
+    return item.submenu.some(subItem => isRouteActive(subItem.matchRoutes))
+}
+
 onMounted(() => {
     document.addEventListener('keydown', onKeydown)
+    
+    // 初始化子菜单状态
+    navigation.forEach((item, index) => {
+        if (shouldExpandSubmenu(item)) {
+            submenuOpen.value[index] = true
+        }
+    })
 })
 
 onUnmounted(() => {
@@ -125,7 +172,7 @@ defineExpose({ showNotification })
             <div class="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-[#f9fafb] px-6">
                 <!-- Logo -->
                 <div class="flex h-16 shrink-0 items-center">
-                    <Link :href="route('home')" class="text-xl font-semibold text-gray-900">
+                    <Link :href="route('admin.dashboard')" class="text-xl font-semibold text-gray-900">
                         {{ page.props.app.name }}
                     </Link>
                 </div>
@@ -133,8 +180,61 @@ defineExpose({ showNotification })
                 <!-- 主导航 -->
                 <nav class="flex flex-1 flex-col">
                     <ul role="list" class="-mx-2 space-y-1">
-                        <li v-for="item in navigation" :key="item.name">
+                        <li v-for="(item, index) in navigation" :key="item.name">
+                            <!-- 有子菜单的导航项 -->
+                            <template v-if="item.submenu">
+                                <div 
+                                    @click="toggleSubmenu(index)"
+                                    :class="[
+                                        isRouteActive(item.matchRoutes)
+                                            ? 'bg-white text-orange-600'
+                                            : 'text-gray-700 hover:text-orange-600 hover:bg-white',
+                                        'group flex gap-x-3 rounded-md px-3 py-2 text-sm leading-6 font-semibold transition-colors duration-200 cursor-pointer'
+                                    ]"
+                                >
+                                    <svg 
+                                        class="h-6 w-6 shrink-0 transition-colors duration-200" 
+                                        :class="isRouteActive(item.matchRoutes) ? 'text-orange-600' : 'text-gray-400 group-hover:text-orange-600'"
+                                        fill="none" 
+                                        viewBox="0 0 24 24" 
+                                        stroke-width="1.5" 
+                                        stroke="currentColor" 
+                                    >
+                                        <path stroke-linecap="round" stroke-linejoin="round" :d="item.icon" />
+                                    </svg>
+                                    <div class="flex flex-1 items-center justify-between">
+                                        <span>{{ item.name }}</span>
+                                        <svg 
+                                            class="h-5 w-5 transition-transform duration-200"
+                                            :class="submenuOpen[index] ? 'rotate-180' : ''"
+                                            viewBox="0 0 20 20" 
+                                            fill="currentColor"
+                                        >
+                                            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <!-- 子菜单 -->
+                                <div v-show="submenuOpen[index]" class="mt-1 space-y-1 pl-10">
+                                    <Link
+                                        v-for="subItem in item.submenu"
+                                        :key="subItem.name"
+                                        :href="subItem.href"
+                                        :class="[
+                                            isRouteActive(subItem.matchRoutes)
+                                                ? 'bg-white text-orange-600'
+                                                : 'text-gray-700 hover:text-orange-600 hover:bg-white',
+                                            'block rounded-md py-2 pr-2 text-sm leading-6 transition-colors duration-200'
+                                        ]"
+                                    >
+                                        {{ subItem.name }}
+                                    </Link>
+                                </div>
+                            </template>
+                            
+                            <!-- 无子菜单的导航项 -->
                             <Link
+                                v-else
                                 :href="item.href"
                                 :class="[
                                     isRouteActive(item.matchRoutes)

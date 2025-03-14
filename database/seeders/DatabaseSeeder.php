@@ -11,6 +11,7 @@ use App\Models\Tag;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class DatabaseSeeder extends Seeder
 {
@@ -78,16 +79,26 @@ class DatabaseSeeder extends Seeder
             'comments',
             'post_tag',
             'post_revisions',
+            // 修改为标准命名约定的权限表
             'roles',
             'permissions',
-            'role_has_permissions',
-            'model_has_roles',
-            'model_has_permissions',
+            'role_permissions',
+            'user_roles',
+            'user_permissions',
+            'temporary_permissions',
         ];
 
         foreach ($tables as $table) {
-            DB::table($table)->truncate();
-            $this->command->line("已清理表: {$table}");
+            try {
+                if (Schema::hasTable($table)) {
+                    DB::table($table)->truncate();
+                    $this->command->line("已清理表: {$table}");
+                } else {
+                    $this->command->warn("表不存在: {$table}");
+                }
+            } catch (\Exception $e) {
+                $this->command->error("清理表 {$table} 失败: " . $e->getMessage());
+            }
         }
 
         // 重新启用外键约束

@@ -88,6 +88,17 @@ const toggleDebug = () => {
 
 // 添加开发环境标志
 const isDevelopment = ref(import.meta.env ? import.meta.env.DEV : false);
+
+// 检查当前用户是否是文章作者
+const isAuthorOfPost = computed(() => {
+  const user = usePage().props.auth?.user;
+  if (!user) return false;
+  
+  // 检查用户是否是文章作者或管理员
+  return props.post.author_id === user.id || 
+         user.permissions?.includes('manage posts') ||
+         user.roles?.some(role => ['admin', 'editor'].includes(role));
+});
 </script>
 
 <template>
@@ -96,20 +107,47 @@ const isDevelopment = ref(import.meta.env ? import.meta.env.DEV : false);
 
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <!-- 文章头部 -->
-            <header class="mb-8">
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-                    {{ post.title }}
-                </h1>
-                <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+            <header class="space-y-3 mb-8">
+                <div class="flex justify-between items-start">
+                    <h1 class="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight">
+                        {{ post.title }}
+                    </h1>
+                    
+                    <!-- 文章作者操作按钮 -->
+                    <div v-if="isAuthorOfPost" class="flex items-center space-x-2 mt-2">
+                        <Link
+                            :href="route('blog.write.edit', post.id)"
+                            class="inline-flex items-center px-3 py-1.5 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 border border-transparent rounded-md font-medium text-xs text-gray-700 dark:text-gray-300 tracking-wide transition"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                            快速编辑
+                        </Link>
+                        
+                        <Link
+                            :href="route('admin.posts.edit', post.id)"
+                            class="inline-flex items-center px-3 py-1.5 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 border border-transparent rounded-md font-medium text-xs text-blue-700 dark:text-blue-300 tracking-wide transition"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            高级编辑
+                        </Link>
+                    </div>
+                </div>
+                
+                <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
                     <div class="flex items-center gap-2">
                         <img :src="post.author.profile_photo_url" :alt="post.author.name" class="w-8 h-8 rounded-full" />
                         <span>{{ post.author.name }}</span>
                     </div>
                     <span>·</span>
                     <time :datetime="post.published_at">{{ formatDate(post.published_at) }}</time>
-                    <span>·</span>
-                    <Link :href="route('blog.categories.show', post.category.slug)" class="hover:text-orange-500">
-                        {{ post.category.name }}
+                    <span v-if="post.category">·</span>
+                    <Link v-if="post.category" :href="route('blog.categories.show', post.category.slug)" class="hover:text-orange-500">
+                        {{ post.category?.name }}
                     </Link>
                 </div>
             </header>

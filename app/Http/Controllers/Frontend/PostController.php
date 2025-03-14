@@ -7,6 +7,7 @@ use App\Models\Post;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
+use App\Models\Category;
 
 class PostController extends Controller
 {
@@ -59,9 +60,12 @@ class PostController extends Controller
                     $query->whereHas('tags', function($q) use ($post) {
                         $q->whereIn('tags.id', $post->tags->pluck('id'));
                     });
-                } else {
-                    // 如果没有标签，则通过分类匹配
+                } elseif ($post->category_id) {
+                    // 如果没有标签但有分类，则通过分类匹配
                     $query->where('category_id', $post->category_id);
+                } else {
+                    // 如果既没有标签也没有分类，则返回最近文章
+                    $query->orderBy('published_at', 'desc');
                 }
             })
             ->orderBy('published_at', 'desc')  // 按发布时间排序
@@ -88,6 +92,16 @@ class PostController extends Controller
             'relatedPosts' => $relatedPosts,
             'prevPost' => $prevPost,
             'nextPost' => $nextPost
+        ]);
+    }
+
+    /**
+     * 显示文章预览页面
+     */
+    public function preview()
+    {
+        return Inertia::render('Blog/Write/Preview', [
+            'categories' => Category::orderBy('name')->get(),
         ]);
     }
 } 

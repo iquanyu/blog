@@ -185,12 +185,12 @@ const hasOtherChanges = computed(() => {
             <div class="flex items-center justify-between">
                 <h3 class="text-base font-medium text-gray-900 dark:text-gray-100">历史版本</h3>
                 <div class="text-sm text-gray-500 dark:text-gray-400">
-                    共 {{ revisions.length }} 个版本
+                    共 {{ revisions && revisions.length ? revisions.length : 0 }} 个版本
                 </div>
             </div>
             
             <div class="divide-y divide-gray-200 dark:divide-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden">
-                <div v-for="(revision, index) in revisions" 
+                <div v-if="revisions && revisions.length > 0" v-for="(revision, index) in revisions" 
                     :key="revision.id" 
                     class="group hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150"
                 >
@@ -257,6 +257,10 @@ const hasOtherChanges = computed(() => {
                             </div>
                         </div>
                     </div>
+                </div>
+                
+                <div v-if="!revisions || revisions.length === 0" class="p-4 text-center text-gray-500 dark:text-gray-400">
+                    暂无历史版本记录
                 </div>
             </div>
         </div>

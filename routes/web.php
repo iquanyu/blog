@@ -67,6 +67,16 @@ Route::group(['as' => 'blog.'], function () {
     
     // 标签页面
     Route::get('/tags/{tag:slug}', [TagController::class, 'show'])->name('tags.show');
+    
+    // 前台写作路由
+    Route::prefix('write')->name('write.')->middleware(['auth'])->group(function () {
+        Route::get('/', [BlogController::class, 'create'])->name('create');
+        Route::get('/edit/{post}', [BlogController::class, 'edit'])->name('edit');
+        Route::get('/preview', [BlogController::class, 'preview'])->name('preview');
+    });
+    
+    // 文章预览路由
+    Route::get('/articles/preview', [PostController::class, 'preview'])->middleware(['auth'])->name('posts.preview');
 });
 
 Route::middleware([
@@ -171,4 +181,36 @@ Route::middleware([
     Route::post('/profile/avatar', [ProfileAvatarController::class, 'update'])
         ->name('profile.avatar.update')
         ->middleware(['auth']);
+
+    // 权限管理路由
+    Route::middleware(['auth', 'verified', 'permission:assign_roles'])->prefix('admin')->name('admin.')->group(function () {
+        // 角色权限管理
+        Route::get('/permissions', [App\Http\Controllers\Admin\PermissionController::class, 'index'])->name('permissions.index');
+        Route::put('/roles/{role}/permissions', [App\Http\Controllers\Admin\PermissionController::class, 'updateRolePermissions'])->name('roles.permissions.update');
+        Route::put('/roles/{role}/permission-groups', [App\Http\Controllers\Admin\PermissionController::class, 'assignPermissionGroup'])->name('roles.permission-groups.update');
+        
+        // 用户权限管理
+        Route::get('/user-permissions', [App\Http\Controllers\Admin\PermissionController::class, 'userPermissions'])->name('permissions.users');
+        Route::put('/users/{user}/roles', [App\Http\Controllers\Admin\PermissionController::class, 'assignUserRoles'])->name('users.roles.update');
+        
+        // 临时权限管理
+        Route::get('/temporary-permissions', [App\Http\Controllers\Admin\PermissionController::class, 'temporaryPermissions'])->name('permissions.temporary');
+        Route::post('/temporary-permissions', [App\Http\Controllers\Admin\PermissionController::class, 'storeTemporaryPermission'])->name('permissions.temporary.store');
+        Route::delete('/temporary-permissions/{temporaryPermission}', [App\Http\Controllers\Admin\PermissionController::class, 'destroyTemporaryPermission'])->name('permissions.temporary.destroy');
+    });
+
+    // 获取当前用户权限（无需权限验证）
+    Route::get('/api/user/permissions', [App\Http\Controllers\Admin\PermissionController::class, 'getCurrentUserPermissions'])->middleware(['auth'])->name('api.user.permissions');
 });
+
+// 用户模拟路由
+Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
+    Route::get('/impersonate/{id}', [\App\Http\Controllers\CustomImpersonateController::class, 'impersonate'])->name('impersonate');
+    Route::get('/impersonate-leave', [\App\Http\Controllers\CustomImpersonateController::class, 'leave'])->name('impersonate.leave');
+});
+
+// 测试用户模拟
+Route::get('/test-impersonate/{id}', [\App\Http\Controllers\TestImpersonateController::class, 'test'])->middleware('auth');
+Route::get('/impersonate-test', function () {
+    return view('test_impersonate');
+})->middleware('auth')->name('impersonate.test');

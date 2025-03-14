@@ -37,7 +37,7 @@ class PostFactory extends Factory
             'content' => $content,
             'editor_type' => 'markdown',
             'excerpt' => Str::limit(strip_tags($content), 200),
-            'featured_image' => $this->faker->imageUrl(1200, 800),
+            'featured_image' => 'https://dummyimage.com/600x400/000/fff',
             'author_id' => User::factory(),
             'views' => $this->faker->numberBetween(0, 1000),
             'created_at' => $createdAt,

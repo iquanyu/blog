@@ -51,7 +51,6 @@ class BlogController extends Controller
             ->groupBy(function($post) {
                 return $post->published_at->format('Y');
             });
-
         return Inertia::render('Blog/Archive', [
             'archives' => $archives
         ]);
@@ -65,7 +64,7 @@ class BlogController extends Controller
         $about = [
             'name' => '花生',
             'role' => '开发',
-            'avatar' => '/img/avatar.jpg',
+            'avatar' => 'https://ui-avatars.com/api/?name=%E8%8A%B1%E7%94%9F&color=7F9CF5&background=EBF4FF',
             'bio' => '热爱技术，专注于Web开发和用户体验设计。擅长Vue.js、Laravel等全栈开发技术。',
             'content' => '
                 <h2>关于我</h2>
@@ -124,6 +123,52 @@ class BlogController extends Controller
 
         return Inertia::render('Blog/About', [
             'about' => $about
+        ]);
+    }
+
+    /**
+     * 显示前台创建文章页面
+     */
+    public function create()
+    {
+        // 检查用户是否有创建文章的权限
+        if (!auth()->user()->can('create posts')) {
+            abort(403, '您没有创建文章的权限');
+        }
+        
+        return Inertia::render('Blog/Write/Create', [
+            'categories' => Category::orderBy('name')->get(),
+            'tags' => Tag::orderBy('name')->get(),
+        ]);
+    }
+
+    /**
+     * 显示前台编辑文章页面
+     */
+    public function edit(Post $post)
+    {
+        // 检查是否为作者本人或有管理权限
+        if (auth()->id() !== $post->author_id && !auth()->user()->can('manage posts')) {
+            abort(403, '您没有编辑此文章的权限');
+        }
+        
+        // 加载文章关联的标签
+        $post->load(['tags']);
+        
+        return Inertia::render('Blog/Write/Edit', [
+            'post' => $post,
+            'categories' => Category::orderBy('name')->get(),
+            'tags' => Tag::orderBy('name')->get(),
+        ]);
+    }
+
+    /**
+     * 显示前台文章预览页面
+     */
+    public function preview()
+    {
+        return Inertia::render('Blog/Write/Preview', [
+            'categories' => Category::orderBy('name')->get(),
         ]);
     }
 } 

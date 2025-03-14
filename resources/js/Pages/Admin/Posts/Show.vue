@@ -61,7 +61,7 @@ const statusColors = {
                         编辑
                     </Link>
                     <Link
-                        :href="route('posts.show', post.slug)"
+                        :href="route('blog.posts.show', post.slug)"
                         target="_blank"
                         class="inline-flex items-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
                     >

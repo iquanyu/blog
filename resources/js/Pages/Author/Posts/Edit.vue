@@ -73,10 +73,10 @@ const handleRestoreRevision = (revision) => {
                 <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg">
                     <div class="p-4 sm:p-8">
                         <PostRevisionHistory
-                            :revisions="post.revisions"
+                            :revisions="post.revisions || []"
                             :current-content="post.content"
                             :current-title="post.title"
-                            :current-excerpt="post.excerpt"
+                            :current-excerpt="post.excerpt || ''"
                             :current-status="post.status"
                             :current-featured-image="post.featured_image"
                             :current-category="post.category"

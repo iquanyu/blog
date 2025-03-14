@@ -3,74 +3,23 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
+use Illuminate\Support\Facades\DB;
 use App\Models\User;
 
 return new class extends Migration
 {
     public function up()
     {
-        // 创建权限
-        $permissions = [
-            'create posts',
-            'edit posts',
-            'delete posts',
-            'manage categories',
-            'manage tags',
-            'manage users',
-        ];
-
-        foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission]);
-        }
-
-        // 创建管理员角色
-        $role = Role::create(['name' => 'admin']);
+        // 不再使用 Spatie 的权限模型
+        // 我们在新的权限系统中已经有了更好的初始化
+        // 这个迁移文件现在是空的，因为我们会在自定义权限系统中初始化所有权限
         
-        // 给管理员角色赋予所有权限
-        $role->givePermissionTo($permissions);
-
-        // 将第一个用户设为管理员
-        $user = User::first();
-        if ($user) {
-            $user->assignRole('admin');
-        }
+        // 不调用任何创建权限的方法
     }
 
     public function down()
     {
-        // 删除角色和权限
-        try {
-            // 尝试查找并删除admin角色
-            if (Role::where('name', 'admin')->exists()) {
-                $role = Role::findByName('admin');
-                $role->delete();
-            }
-        } catch (\Exception $e) {
-            // 记录错误但继续执行
-            \Log::warning("无法删除admin角色: " . $e->getMessage());
-        }
-
-        $permissions = [
-            'create posts',
-            'edit posts',
-            'delete posts',
-            'manage categories',
-            'manage tags',
-            'manage users',
-        ];
-
-        foreach ($permissions as $permission) {
-            try {
-                $permission = Permission::findByName($permission);
-                if ($permission) {
-                    $permission->delete();
-                }
-            } catch (\Exception $e) {
-                // 记录错误但继续执行
-                \Log::warning("无法删除权限 {$permission}: " . $e->getMessage());
-            }
-        }
+        // 不再使用 Spatie 的权限模型
+        // 降级方法也是空的
     }
 }; 

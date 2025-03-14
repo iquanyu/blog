@@ -257,7 +257,7 @@ const deletePost = () => {
                             <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                 <div class="flex justify-end gap-2">
                                     <Link
-                                        :href="route('posts.show', post.slug)"
+                                        :href="route('blog.posts.show', post.slug)"
                                         class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                                         title="查看"
                                     >
