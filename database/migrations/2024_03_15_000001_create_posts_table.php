@@ -17,6 +17,8 @@ return new class extends Migration
             $table->text('content');
             $table->text('excerpt')->nullable();
             $table->string('featured_image')->nullable();
+            $table->boolean('allow_comments')->default(true);
+            $table->boolean('featured')->default(false);
             $table->string('status')->default('draft');
             $table->integer('views')->default(0);
             $table->timestamp('published_at')->nullable();

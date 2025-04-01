@@ -6,105 +6,87 @@ const props = defineProps({
     links: {
         type: Array,
         required: true,
-    },
-    // 添加自定义文本支持
-    texts: {
-        type: Object,
-        default: () => ({
-            previous: '上一页',
-            next: '下一页',
-            showing: '显示',
-            to: '至',
-            of: '条，共',
-            results: '条记录'
-        })
     }
 });
 
-// 使用计算属性处理分页数据
-const paginationData = computed(() => {
-    const data = {
-        currentPage: 1,
-        lastPage: 1,
-        from: 0,
-        to: 0,
-        total: 0
-    };
-
-    // 确保 links 存在且是数组
-    if (!Array.isArray(props.links) || props.links.length === 0) {
-        return data;
-    }
-
-    // 从链接数组中提取分页信息
-    props.links.forEach(link => {
-        if (link.active) {
-            data.currentPage = parseInt(link.label);
-        }
-        if (!link.url && !link.active && link.label.includes('...')) {
-            data.lastPage = parseInt(props.links[props.links.length - 2].label);
-        }
-    });
-
-    return data;
+// 获取上一页和下一页链接
+const prevLink = computed(() => {
+    return props.links.find(link => link.label.includes('Previous'));
 });
 
-// 优化的标签翻译函数
-const getPageLabel = computed(() => (label) => {
-    // 处理特殊标签
-    if (label.includes('Previous')) return `« ${props.texts.previous}`;
-    if (label.includes('Next')) return `${props.texts.next} »`;
-    
-    // 处理省略号
-    if (label.includes('...')) return '...';
-    
-    // 返回页码
-    return label;
+const nextLink = computed(() => {
+    return props.links.find(link => link.label.includes('Next'));
 });
 
-// 计算是否显示某个页码
-const shouldShowPage = computed(() => (pageNumber) => {
-    const { currentPage, lastPage } = paginationData.value;
-    
-    // 始终显示第一页和最后一页
-    if (pageNumber === 1 || pageNumber === lastPage) return true;
-    
-    // 显示当前页码周围的页码
-    const delta = 2;
-    return Math.abs(pageNumber - currentPage) <= delta;
+// 获取页码链接
+const pageLinks = computed(() => {
+    return props.links.filter(link => 
+        !link.label.includes('Previous') && 
+        !link.label.includes('Next') && 
+        !link.label.includes('...')
+    );
+});
+
+// 获取当前页码
+const currentPage = computed(() => {
+    return pageLinks.value.find(link => link.active)?.label || '1';
 });
 </script>
 
 <template>
-    <div v-if="links && links.length > 0" class="flex flex-col items-center space-y-4">
+    <div class="flex flex-col items-center space-y-4">
         <!-- 分页链接 -->
-        <div class="flex flex-wrap justify-center gap-1">
-            <template v-for="(link, key) in links" :key="key">
-                <div
-                    v-if="link.url === null"
-                    class="px-4 py-2 text-sm text-gray-500 bg-white border border-gray-300 rounded-md cursor-not-allowed dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600"
-                    v-text="getPageLabel(link.label)"
-                />
+        <div class="flex justify-center gap-2">
+            <!-- 移动端只显示上一页和下一页 -->
+            <div class="sm:hidden flex gap-2">
+                <div v-if="!prevLink?.url" 
+                    class="px-3 py-2 text-sm text-gray-500 bg-white border rounded-md"
+                >
+                    上一页
+                </div>
                 <Link
                     v-else
-                    :href="link.url"
-                    class="relative inline-flex items-center px-4 py-2 text-sm border rounded-md transition-colors"
-                    :class="[
-                        link.active 
-                            ? 'z-10 bg-orange-50 text-orange-600 border-orange-500 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-500/30' 
-                            : 'text-gray-500 bg-white border-gray-300 hover:bg-gray-50 dark:text-gray-400 dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700',
-                    ]"
-                    v-text="getPageLabel(link.label)"
-                />
-            </template>
+                    :href="prevLink.url"
+                    class="px-3 py-2 text-sm bg-white border rounded-md hover:bg-gray-50 focus:border-indigo-500 focus:text-indigo-600"
+                >
+                    上一页
+                </Link>
+
+                <div v-if="!nextLink?.url" 
+                    class="px-3 py-2 text-sm text-gray-500 bg-white border rounded-md"
+                >
+                    下一页
+                </div>
+                <Link
+                    v-else
+                    :href="nextLink.url"
+                    class="px-3 py-2 text-sm bg-white border rounded-md hover:bg-gray-50 focus:border-indigo-500 focus:text-indigo-600"
+                >
+                    下一页
+                </Link>
+            </div>
+
+            <!-- 桌面端显示完整分页 -->
+            <div class="hidden sm:flex flex-wrap justify-center gap-1">
+                <template v-for="(link, key) in links" :key="key">
+                    <div v-if="link.url === null" 
+                        class="px-3 py-2 text-sm text-gray-500 bg-white border rounded-md"
+                        v-html="link.label" 
+                    />
+                    <Link
+                        v-else
+                        :href="link.url"
+                        class="px-3 py-2 text-sm bg-white border rounded-md hover:bg-gray-50 focus:border-indigo-500 focus:text-indigo-600"
+                        :class="{ 'bg-indigo-50 border-indigo-500 text-indigo-600': link.active }"
+                        v-html="link.label"
+                    />
+                </template>
+            </div>
         </div>
 
-        <!-- 分页信息 -->
-        <div 
-            v-if="paginationData.total > 0"
-            class="text-sm text-gray-500 dark:text-gray-400"
-        >
-            <span>{{ texts.showing }} {{ paginationData.from }} {{ texts.to }} {{ paginationData.to }} {{ texts.of }} {{ paginationData.total }} {{ texts.results }}</span>
+        <!-- 当前页码信息 -->
+        <div class="text-sm text-gray-500">
+            第 {{ currentPage }} 页
         </div>
     </div>
 </template>

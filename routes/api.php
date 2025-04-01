@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\Api\DraftController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,6 +28,15 @@ Route::get('/global-search', [SearchController::class, 'globalSearch'])->name('a
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/posts/{post:slug}/like', [PostController::class, 'toggleLike']);
     Route::post('/posts/{post:slug}/subscribe', [PostController::class, 'toggleSubscribe']);
+    
+    // 草稿API
+    Route::get('/drafts/latest', [DraftController::class, 'getLatest'])->name('api.drafts.latest');
+    Route::post('/drafts', [DraftController::class, 'store'])->name('api.drafts.store');
+    Route::delete('/drafts/{id}', [DraftController::class, 'destroy'])->name('api.drafts.destroy');
+    
+    // 分类和标签API
+    Route::get('/categories', [PostController::class, 'getCategories'])->name('api.categories.index');
+    Route::get('/tags', [PostController::class, 'getTags'])->name('api.tags.index');
 });
 
 // 文章相关API

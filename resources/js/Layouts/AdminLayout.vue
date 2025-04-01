@@ -48,32 +48,16 @@ const navigation = [
         matchRoutes: ['admin.tags.']
     },
     {
+        name: '页面管理',
+        href: route('admin.pages.index'),
+        icon: 'M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z',
+        matchRoutes: ['admin.pages.']
+    },
+    {
         name: '用户管理',
         href: route('admin.users.index'),
         icon: 'M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z',
         matchRoutes: ['admin.users.']
-    },
-    {
-        name: '权限管理',
-        icon: 'M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z',
-        submenu: [
-            {
-                name: '角色权限',
-                href: route('admin.permissions.index'),
-                matchRoutes: ['admin.permissions.index']
-            },
-            {
-                name: '用户角色',
-                href: route('admin.permissions.users'),
-                matchRoutes: ['admin.permissions.users']
-            },
-            {
-                name: '临时权限',
-                href: route('admin.permissions.temporary'),
-                matchRoutes: ['admin.permissions.temporary']
-            }
-        ],
-        matchRoutes: ['admin.permissions.']
     }
 ]
 

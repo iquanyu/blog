@@ -28,8 +28,25 @@ class BlogController extends Controller
             });
         }
 
+        // 使用 withQueryString 保持搜索参数
         $posts = $query->paginate(9)->withQueryString();
 
+        // 如果是 AJAX 请求，返回 JSON 数据
+        if ($request->ajax() && !$request->hasHeader('X-Inertia')) {
+            return response()->json([
+                'posts' => $posts,
+                'filters' => [
+                    'search' => $search,
+                ],
+            ]);
+        }
+
+        // 如果是直接访问分页 URL，重定向到首页
+        if ($request->has('page') && $request->page > 1 && !$request->ajax()) {
+            return redirect()->route('blog.home');
+        }
+
+        // 否则返回完整页面
         return Inertia::render('Blog/Index', [
             'posts' => $posts,
             'filters' => [
@@ -51,6 +68,11 @@ class BlogController extends Controller
             ->groupBy(function($post) {
                 return $post->published_at->format('Y');
             });
+            
+        //dd($archives);
+        // 对年份进行倒序排列，确保最新的年份显示在前面
+        $archives = $archives->sortKeysDesc();
+            
         return Inertia::render('Blog/Archive', [
             'archives' => $archives
         ]);
@@ -61,7 +83,11 @@ class BlogController extends Controller
      */
     public function about()
     {
-        $about = [
+        // 从数据库获取关于页面内容
+        $pageContent = \App\Models\PageContent::getByKey('about');
+        
+        // 如果数据库中没有内容，使用默认数据
+        $about = $pageContent ? $pageContent->content : [
             'name' => '花生',
             'role' => '开发',
             'avatar' => 'https://ui-avatars.com/api/?name=%E8%8A%B1%E7%94%9F&color=7F9CF5&background=EBF4FF',
@@ -120,6 +146,11 @@ class BlogController extends Controller
                 ]
             ]
         ];
+        
+        // 添加HTML内容
+        if ($pageContent && $pageContent->html_content) {
+            $about['content'] = $pageContent->html_content;
+        }
 
         return Inertia::render('Blog/About', [
             'about' => $about
@@ -131,14 +162,10 @@ class BlogController extends Controller
      */
     public function create()
     {
-        // 检查用户是否有创建文章的权限
-        if (!auth()->user()->can('create posts')) {
-            abort(403, '您没有创建文章的权限');
-        }
-        
-        return Inertia::render('Blog/Write/Create', [
+        return Inertia::render('Blog/ArticleEditor/ArticleEditor', [
             'categories' => Category::orderBy('name')->get(),
             'tags' => Tag::orderBy('name')->get(),
+            'user' => auth()->user()
         ]);
     }
 
@@ -147,18 +174,14 @@ class BlogController extends Controller
      */
     public function edit(Post $post)
     {
-        // 检查是否为作者本人或有管理权限
-        if (auth()->id() !== $post->author_id && !auth()->user()->can('manage posts')) {
-            abort(403, '您没有编辑此文章的权限');
-        }
-        
         // 加载文章关联的标签
         $post->load(['tags']);
         
-        return Inertia::render('Blog/Write/Edit', [
+        return Inertia::render('Blog/ArticleEditor/ArticleEditor', [
             'post' => $post,
             'categories' => Category::orderBy('name')->get(),
             'tags' => Tag::orderBy('name')->get(),
+            'user' => auth()->user()
         ]);
     }
 

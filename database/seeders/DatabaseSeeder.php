@@ -35,10 +35,6 @@ class DatabaseSeeder extends Seeder
         // 开始填充数据
         $this->command->info('开始填充数据...');
         
-        // 创建角色和权限
-        $this->command->info('创建角色和权限...');
-        $this->call(RoleAndPermissionSeeder::class);
-
         // 创建用户
         $this->command->info('创建用户...');
         $this->call(UserSeeder::class);
@@ -58,6 +54,10 @@ class DatabaseSeeder extends Seeder
         // 创建评论
         $this->command->info('创建评论...');
         $this->call(CommentSeeder::class);
+        
+        // 创建页面内容
+        $this->command->info('创建页面内容...');
+        $this->call(PageContentSeeder::class);
 
         $this->command->info('数据填充完成！');
     }
@@ -79,13 +79,7 @@ class DatabaseSeeder extends Seeder
             'comments',
             'post_tag',
             'post_revisions',
-            // 修改为标准命名约定的权限表
-            'roles',
-            'permissions',
-            'role_permissions',
-            'user_roles',
-            'user_permissions',
-            'temporary_permissions',
+            'page_contents',
         ];
 
         foreach ($tables as $table) {

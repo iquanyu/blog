@@ -1,12 +1,21 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
+import { computed } from 'vue'
 
-defineProps({
+const props = defineProps({
     archives: {
         type: Object,
         required: true
     }
+})
+
+// 确保年份按照倒序排列（从新到旧）
+const sortedArchives = computed(() => {
+    // 将对象转换为数组并保持排序
+    return Object.entries(props.archives).sort((a, b) => {
+        return parseInt(b[0]) - parseInt(a[0]) // 按年份数字大小倒序排列
+    })
 })
 </script>
 
@@ -20,7 +29,7 @@ defineProps({
                     <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">文章归档</h1>
                     
                     <div class="mt-16 space-y-20">
-                        <section v-for="(posts, year) in archives" :key="year" class="relative">
+                        <section v-for="[year, posts] in sortedArchives" :key="year" class="relative">
                             <div class="sticky top-0 z-20 -ml-8 mb-4 bg-white/75 px-8 pb-4 pt-4 backdrop-blur dark:bg-gray-900/75">
                                 <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ year }}</h2>
                             </div>

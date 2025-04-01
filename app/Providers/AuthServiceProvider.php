@@ -27,22 +27,6 @@ class AuthServiceProvider extends ServiceProvider
     {
         // 注册策略
         $this->registerPolicies();
-        
-        // 注册权限服务
-        $this->app->singleton('permission.service', function ($app) {
-            return new \App\Services\PermissionService();
-        });
-        
-        // 超级管理员可以执行任何操作
-        Gate::before(function (User $user, $ability) {
-            if ($user->hasRole('super-admin')) {
-                return true;
-            }
-        });
-        
-        // 定义通用权限检查Gate
-        Gate::define('permission', function (User $user, $permission, $conditions = []) {
-            return $user->hasPermissionTo($permission, $conditions);
-        });
+
     }
 }

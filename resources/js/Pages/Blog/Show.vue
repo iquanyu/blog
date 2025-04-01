@@ -89,15 +89,10 @@ const toggleDebug = () => {
 // 添加开发环境标志
 const isDevelopment = ref(import.meta.env ? import.meta.env.DEV : false);
 
-// 检查当前用户是否是文章作者
-const isAuthorOfPost = computed(() => {
-  const user = usePage().props.auth?.user;
-  if (!user) return false;
-  
-  // 检查用户是否是文章作者或管理员
-  return props.post.author_id === user.id || 
-         user.permissions?.includes('manage posts') ||
-         user.roles?.some(role => ['admin', 'editor'].includes(role));
+// 检查用户是否有权编辑文章
+const canEdit = computed(() => {
+  const user = usePage().props.auth.user;
+  return user && (user.id === props.post.author_id || user); // 只要是登录用户就可以编辑
 });
 </script>
 
@@ -114,9 +109,9 @@ const isAuthorOfPost = computed(() => {
                     </h1>
                     
                     <!-- 文章作者操作按钮 -->
-                    <div v-if="isAuthorOfPost" class="flex items-center space-x-2 mt-2">
+                    <div v-if="canEdit" class="flex items-center space-x-2 mt-2">
                         <Link
-                            :href="route('blog.write.edit', post.id)"
+                            :href="route('blog.editor.edit', post.id)"
                             class="inline-flex items-center px-3 py-1.5 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 border border-transparent rounded-md font-medium text-xs text-gray-700 dark:text-gray-300 tracking-wide transition"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">

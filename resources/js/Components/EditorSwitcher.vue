@@ -58,10 +58,10 @@ const switchMode = () => {
     // 从简洁模式切换到完整模式
     if (props.postId) {
       // 已有文章，跳转到后台编辑页
-      router.visit(route('admin.posts.edit', props.postId));
+      router.visit(route('blog.editor.edit', props.postId));
     } else {
       // 新文章，跳转到后台创建页
-      router.visit(route('admin.posts.create'));
+      router.visit(route('blog.editor.create'));
     }
   } else {
     // 从完整模式切换到简洁模式
@@ -70,7 +70,7 @@ const switchMode = () => {
       router.visit(route('blog.write.edit', props.postSlug));
     } else {
       // 新文章，跳转到前台创建页
-      router.visit(route('blog.write.create'));
+      router.visit(route('blog.editor.create'));
     }
   }
 };

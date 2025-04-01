@@ -1,11 +1,11 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import InputError from '@/Components/InputError.vue';
 import TextInput from '@/Components/TextInput.vue';
 
-defineProps({
+const props = defineProps({
     canResetPassword: {
         type: Boolean,
     },
@@ -22,7 +22,13 @@ const form = useForm({
     email: '',
     password: '',
     remember: false,
-    redirect: '',
+    redirect: props.redirect,
+});
+
+onMounted(() => {
+    if (props.redirect) {
+        form.redirect = props.redirect;
+    }
 });
 
 const submit = () => {

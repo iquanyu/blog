@@ -22,6 +22,7 @@ use App\Http\Controllers\PostLikeController;
 use App\Http\Controllers\AuthorPostController;
 use App\Http\Controllers\Author\UploadController as AuthorUploadController;
 use App\Http\Controllers\ProfileAvatarController;
+use App\Http\Controllers\ArticleEditorController;
 
 /*
 |--------------------------------------------------------------------------
@@ -68,11 +69,16 @@ Route::group(['as' => 'blog.'], function () {
     // 标签页面
     Route::get('/tags/{tag:slug}', [TagController::class, 'show'])->name('tags.show');
     
-    // 前台写作路由
-    Route::prefix('write')->name('write.')->middleware(['auth'])->group(function () {
-        Route::get('/', [BlogController::class, 'create'])->name('create');
-        Route::get('/edit/{post}', [BlogController::class, 'edit'])->name('edit');
-        Route::get('/preview', [BlogController::class, 'preview'])->name('preview');
+    // 文章编辑器路由
+    Route::prefix('editor')->name('editor.')->middleware(['auth'])->group(function () {
+        // 新文章编辑器
+        Route::get('/create', [ArticleEditorController::class, 'create'])->name('create');
+        // 编辑文章
+        Route::get('/edit/{id}', [ArticleEditorController::class, 'edit'])->name('edit');
+        // 保存文章
+        Route::post('/store', [ArticleEditorController::class, 'store'])->name('store');
+        // 更新文章
+        Route::put('/update/{id}', [ArticleEditorController::class, 'update'])->name('update');
     });
     
     // 文章预览路由
@@ -92,38 +98,30 @@ Route::middleware([
     Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(function () {
         // 文章管理
         Route::resource('posts', AdminPostController::class)
-            ->except(['show'])
-            ->middleware(['can:manage posts']);
+            ->except(['show']);
 
         // 文章回收站
         Route::get('posts/trash', [AdminPostController::class, 'trash'])
-            ->name('posts.trash')
-            ->middleware('can:manage posts');
+            ->name('posts.trash');
         Route::put('posts/{id}/restore', [AdminPostController::class, 'restore'])
-            ->name('posts.restore')
-            ->middleware('can:manage posts');
+            ->name('posts.restore');
         Route::delete('posts/{id}/force-delete', [AdminPostController::class, 'forceDelete'])
-            ->name('posts.force-delete')
-            ->middleware('can:manage posts');
+            ->name('posts.force-delete');
 
         // 分类管理
-        Route::resource('categories', AdminCategoryController::class)
-            ->middleware('permission:manage categories');
+        Route::resource('categories', AdminCategoryController::class);
 
         // 标签管理
-        Route::resource('tags', AdminTagController::class)
-            ->middleware('permission:manage tags');
+        Route::resource('tags', AdminTagController::class);
 
         // 用户管理
-        Route::resource('users', AdminUserController::class)
-            ->middleware('permission:manage users');
+        Route::resource('users', AdminUserController::class);
 
         // 图片上传
         Route::post('/upload/image', [UploadController::class, 'image'])
-            ->name('upload.image')
-            ->middleware('permission:create posts');
+            ->name('upload.image');
 
-        Route::middleware(['auth', 'verified', 'admin'])->group(function () {
+        Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         });
 
@@ -146,6 +144,14 @@ Route::middleware([
             Route::get('/{revision}', [PostRevisionController::class, 'show'])->name('show');
             Route::post('/{revision}/restore', [PostRevisionController::class, 'restore'])->name('restore');
         });
+        
+        // 页面内容管理
+        Route::get('/pages', [\App\Http\Controllers\Admin\PageContentController::class, 'index'])
+            ->name('pages.index');
+        Route::get('/pages/{pageContent}/edit', [\App\Http\Controllers\Admin\PageContentController::class, 'edit'])
+            ->name('pages.edit');
+        Route::put('/pages/{pageContent}', [\App\Http\Controllers\Admin\PageContentController::class, 'update'])
+            ->name('pages.update');
     });
 
     // 评论和点赞路由 - 需要登录的部分
@@ -181,26 +187,6 @@ Route::middleware([
     Route::post('/profile/avatar', [ProfileAvatarController::class, 'update'])
         ->name('profile.avatar.update')
         ->middleware(['auth']);
-
-    // 权限管理路由
-    Route::middleware(['auth', 'verified', 'permission:assign_roles'])->prefix('admin')->name('admin.')->group(function () {
-        // 角色权限管理
-        Route::get('/permissions', [App\Http\Controllers\Admin\PermissionController::class, 'index'])->name('permissions.index');
-        Route::put('/roles/{role}/permissions', [App\Http\Controllers\Admin\PermissionController::class, 'updateRolePermissions'])->name('roles.permissions.update');
-        Route::put('/roles/{role}/permission-groups', [App\Http\Controllers\Admin\PermissionController::class, 'assignPermissionGroup'])->name('roles.permission-groups.update');
-        
-        // 用户权限管理
-        Route::get('/user-permissions', [App\Http\Controllers\Admin\PermissionController::class, 'userPermissions'])->name('permissions.users');
-        Route::put('/users/{user}/roles', [App\Http\Controllers\Admin\PermissionController::class, 'assignUserRoles'])->name('users.roles.update');
-        
-        // 临时权限管理
-        Route::get('/temporary-permissions', [App\Http\Controllers\Admin\PermissionController::class, 'temporaryPermissions'])->name('permissions.temporary');
-        Route::post('/temporary-permissions', [App\Http\Controllers\Admin\PermissionController::class, 'storeTemporaryPermission'])->name('permissions.temporary.store');
-        Route::delete('/temporary-permissions/{temporaryPermission}', [App\Http\Controllers\Admin\PermissionController::class, 'destroyTemporaryPermission'])->name('permissions.temporary.destroy');
-    });
-
-    // 获取当前用户权限（无需权限验证）
-    Route::get('/api/user/permissions', [App\Http\Controllers\Admin\PermissionController::class, 'getCurrentUserPermissions'])->middleware(['auth'])->name('api.user.permissions');
 });
 
 // 用户模拟路由

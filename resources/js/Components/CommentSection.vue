@@ -2,8 +2,10 @@
 import { ref } from 'vue'
 import { useForm, router, usePage } from '@inertiajs/vue3'
 import ConfirmDialog from '@/Components/ConfirmDialog.vue'
+import { useToast } from '@/Composables/useToast'
 
 const page = usePage()
+const toast = useToast()
 
 const props = defineProps({
     post: {
@@ -51,6 +53,15 @@ const submitComment = () => {
                     }
                 }
             }, 100)
+
+            // 显示成功通知
+            console.log('显示评论发布成功提示')
+            toast.success('评论发布成功！', 5000)
+        },
+        onError: (errors) => {
+            // 显示错误通知
+            console.log('显示评论发布失败提示')
+            toast.error('评论发布失败：' + Object.values(errors).join(', '), 5000)
         }
     })
 }
@@ -74,11 +85,25 @@ const deleteComment = (comment) => {
 // 确认删除
 const confirmDelete = () => {
     if (commentToDelete.value) {
+        console.log('开始删除评论', commentToDelete.value.id)
+        
         router.delete(route('blog.comments.destroy', commentToDelete.value.id), {
             preserveScroll: true,
             onSuccess: () => {
                 showDeleteDialog.value = false
                 commentToDelete.value = null
+                
+                // 显示成功通知
+                console.log('显示评论删除成功提示')
+                toast.success('评论已删除', 5000)
+            },
+            onError: (error) => {
+                showDeleteDialog.value = false
+                commentToDelete.value = null
+                
+                // 显示错误通知
+                console.log('显示评论删除失败提示')
+                toast.error('删除评论失败：' + error, 5000)
             }
         })
     }
@@ -92,8 +117,10 @@ const cancelDelete = () => {
 
 // 跳转到登录页面
 const goToLogin = () => {
-    const currentPath = window.location.pathname + window.location.hash
-    window.location.href = route('login') + '?redirect=' + encodeURIComponent(currentPath)
+    // 获取完整当前URL，包括查询参数
+    const currentUrl = window.location.href
+    // 直接使用完整的URL作为重定向目标
+    router.visit(route('login', { redirect: currentUrl }))
 }
 </script>
 
@@ -308,11 +335,12 @@ const goToLogin = () => {
             :show="showDeleteDialog"
             @confirm="confirmDelete"
             @cancel="cancelDelete"
+            @close="cancelDelete"
             title="删除评论"
             content="确定要删除这条评论吗？此操作无法撤销。"
-            confirm-button-text="删除"
-            cancel-button-text="取消"
-            confirm-button-class="bg-red-600 hover:bg-red-500"
+            :confirmText="'删除'"
+            :cancelText="'取消'"
+            class="bg-red-600 hover:bg-red-500"
         />
 
         <!-- 登录提示对话框 -->
@@ -320,10 +348,11 @@ const goToLogin = () => {
             :show="showLoginDialog"
             @confirm="goToLogin"
             @cancel="showLoginDialog = false"
+            @close="showLoginDialog = false"
             title="需要登录"
             content="请先登录后再发表评论。"
-            confirm-button-text="去登录"
-            cancel-button-text="取消"
+            :confirmText="'去登录'"
+            :cancelText="'取消'"
         />
     </div>
 </template>

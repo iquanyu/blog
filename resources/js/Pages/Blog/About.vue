@@ -54,7 +54,7 @@ onMounted(() => {
                 <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-8">{{ about.bio }}</p>
 
                 <!-- 社交链接 -->
-                <div class="flex justify-center space-x-6 mb-12">
+                <div v-if="about.social_links && about.social_links.length > 0" class="flex justify-center space-x-6 mb-12">
                     <SocialIcons ref="socialIconsRef" />
                     <a 
                         v-for="link in about.social_links" 
@@ -73,7 +73,7 @@ onMounted(() => {
             <div class="prose dark:prose-invert max-w-none" v-html="about.content"></div>
 
             <!-- 技能展示 -->
-            <div class="mt-16">
+            <div v-if="about.skills && about.skills.length > 0" class="mt-16">
                 <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-8">技能专长</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div 

@@ -22,7 +22,8 @@ class Post extends Model
         'published_at',
         'author_id',
         'category_id',
-        'views'
+        'views',
+        'allow_comments'
     ];
 
     protected $attributes = [

@@ -13,7 +13,7 @@ const props = defineProps({
 const isLiked = ref(props.post.is_liked)
 const likesCount = ref(props.post.likes_count)
 const isLoading = ref(false)
-const { toast } = useToast()
+const toast = useToast()
 
 
 // 创建一个新的 axios 实例
@@ -54,8 +54,11 @@ const toggleLike = async () => {
         // 使用服务器返回的状态更新
         isLiked.value = response.data.is_liked
         likesCount.value = response.data.likes_count
-
-        toast.success('操作成功')
+        if(isLiked.value){
+            toast.success('点赞成功')
+        }else{
+            toast.success('操作成功')
+        }
     } catch (error) {
         // 恢复到操作前的状态
         isLiked.value = originalIsLiked
@@ -72,7 +75,6 @@ const toggleLike = async () => {
     } finally {
         isLoading.value = false
     }
-    
 }
 </script>
 

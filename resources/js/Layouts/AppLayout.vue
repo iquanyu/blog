@@ -8,7 +8,6 @@ import DropdownLink from '@/Components/DropdownLink.vue';
 import { computed } from 'vue';
 import SearchBar from '@/Components/SearchBar.vue'
 import BackToTop from '@/Components/BackToTop.vue'
-import ReadingProgress from '@/Components/ReadingProgress.vue'
 import { TransitionRoot, TransitionChild } from '@headlessui/vue'
 import Toast from '@/Components/Toast.vue'
 
@@ -128,56 +127,9 @@ const isMac = computed(() => {
 
 <template>
     <div>
-        <!-- 模拟状态提示 -->
-        <div v-if="$page.props.auth.impersonated" class="bg-yellow-500 p-2 text-center">
-            <div class="container mx-auto">
-                <span class="text-yellow-900 font-medium">您当前正在模拟 {{ $page.props.auth.user.name }} 的账号。</span>
-                <Link :href="route('admin.impersonate.leave')" class="ml-2 underline text-yellow-900 font-bold">
-                    返回自己的账号
-                </Link>
-            </div>
-        </div>
-
         <div class="min-h-screen bg-white dark:bg-gray-900">
             <Head :title="title" />
             <Banner />
-
-            <!-- 背景装饰 - 网格 -->
-            <div class="absolute inset-0 -z-10 mx-0 max-w-none overflow-hidden">
-                <div class="absolute left-1/2 top-0 ml-[-38rem] h-[25rem] w-[81.25rem] dark:[mask-image:linear-gradient(white,transparent)]">
-                    <div class="absolute inset-0 bg-gradient-to-r from-[#36b49f] to-[#DBFF75] opacity-40 [mask-image:radial-gradient(farthest-side_at_top,white,transparent)] dark:from-[#36b49f]/30 dark:to-[#DBFF75]/30 dark:opacity-100">
-                        <svg
-                            aria-hidden="true"
-                            class="absolute inset-x-0 inset-y-[-50%] h-[200%] w-full skew-y-[-18deg] fill-black/40 stroke-black/50 mix-blend-overlay dark:fill-white/2.5 dark:stroke-white/5"
-                        >
-                            <defs>
-                                <pattern id="pattern" width="72" height="56" patternUnits="userSpaceOnUse" x="50%" y="16">
-                                    <path d="M.5 56V.5H72" fill="none" />
-                                </pattern>
-                            </defs>
-                            <rect width="100%" height="100%" stroke-width="0" fill="url(#pattern)" />
-                            <svg x="50%" y="16" class="overflow-visible">
-                                <rect stroke-width="0" width="73" height="57" x="0" y="56" />
-                                <rect stroke-width="0" width="73" height="57" x="72" y="168" />
-                            </svg>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 背景装饰 - 中心线条 -->
-            <div class="absolute inset-0 -z-10 mx-auto max-w-6xl">
-                <div class="absolute left-1/2 -translate-x-1/2 h-full w-px bg-gradient-to-b from-transparent via-gray-200 to-transparent dark:via-gray-800"></div>
-            </div>
-
-            <!-- 背景装饰 - 斜线纹理 -->
-            <div class="absolute inset-0 -z-10">
-                <div class="absolute inset-0 bg-[linear-gradient(to_right,transparent_0%,#00000008_50%,transparent_100%)] dark:bg-[linear-gradient(to_right,transparent_0%,#FFFFFF08_50%,transparent_100%)]"></div>
-                <div class="absolute inset-0 [mask-image:linear-gradient(to_bottom,transparent,black)]">
-                    <div class="absolute inset-0 bg-grid-slate-100/[0.03] bg-[size:10px_10px] dark:bg-grid-slate-700/[0.03]"
-                        style="mask-image: linear-gradient(to bottom, transparent, black, transparent);"></div>
-                </div>
-            </div>
 
             <!-- 导航栏 -->
             <header class="relative z-50">
@@ -242,26 +194,6 @@ const isMac = computed(() => {
                                         </template>
                                         我的文章
                                     </DropdownLink>
-
-                                    <!-- 管理后台链接 -->
-                                    <template v-if="user.can?.['manage posts'] || user.is_admin">
-                                        <DropdownLink :href="route('admin.posts.index')" as="link" class="text-sm">
-                                            <template #icon>
-                                                <svg class="mr-2 h-5 w-5 text-gray-400 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                                    <path fill-rule="evenodd" d="M7.502 6h7.128A3.375 3.375 0 0118 9.375v9.375a3 3 0 003-3V6.108c0-1.505-1.125-2.811-2.664-2.94a48.972 48.972 0 00-.673-.05A3 3 0 0015 1.5h-1.5a3 3 0 00-2.663 1.618c-.225.015-.45.032-.673.05C8.662 3.295 7.554 4.542 7.502 6zM13.5 3A1.5 1.5 0 0012 4.5h4.5A1.5 1.5 0 0015 3h-1.5z" clip-rule="evenodd" />
-                                                    <path fill-rule="evenodd" d="M3 9.375C3 8.339 3.84 7.5 4.875 7.5h9.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-9.75A1.875 1.875 0 013 20.625V9.375zM6 12a.75.75 0 01.75-.75h.008a.75.75 0 01.75.75v.008a.75.75 0 01-.75.75H6.75a.75.75 0 01-.75-.75V12zm2.25 0a.75.75 0 01.75-.75h3.75a.75.75 0 010 1.5H9a.75.75 0 01-.75-.75zM6 15a.75.75 0 01.75-.75h.008a.75.75 0 01.75.75v.008a.75.75 0 01-.75.75H6.75a.75.75 0 01-.75-.75V15zm2.25 0a.75.75 0 01.75-.75h3.75a.75.75 0 010 1.5H9a.75.75 0 01-.75-.75zM6 18a.75.75 0 01.75-.75h.008a.75.75 0 01.75.75v.008a.75.75 0 01-.75.75H6.75a.75.75 0 01-.75-.75V18zm2.25 0a.75.75 0 01.75-.75h3.75a.75.75 0 010 1.5H9a.75.75 0 01-.75-.75z" clip-rule="evenodd" />
-                                                </svg>
-                                            </template>
-                                            文章管理
-                                        </DropdownLink>
-                                    </template>
-
-                                    <!-- 后台管理链接 -->
-                                    <template v-if="$page.props.auth.user?.is_admin">
-                                        <DropdownLink :href="route('admin.dashboard')" as="link" class="text-sm">
-                                            后台管理
-                                        </DropdownLink>
-                                    </template>
 
                                     <div class="border-t border-gray-100 dark:border-gray-700"></div>
 
@@ -454,39 +386,11 @@ const isMac = computed(() => {
                 </div>
             </footer>
 
-            <ReadingProgress />
             <BackToTop />
             <Toast />
         </div>
     </div>
 </template>
-
-<style>
-/* 添加网格背景图案 */
-.bg-grid-slate-100 {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(51 65 85 / 0.1)'%3E%3Cpath d='M0 .5H31.5V32'/%3E%3C/svg%3E");
-}
-
-.bg-grid-slate-700 {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(226 232 240 / 0.1)'%3E%3Cpath d='M0 .5H31.5V32'/%3E%3C/svg%3E");
-}
-
-/* 确保背景图案固定 */
-.bg-grid-slate-100, .bg-grid-slate-700 {
-    background-attachment: fixed;
-}
-
-/* 添加渐变遮罩效果 */
-[mask-image] {
-    -webkit-mask-image: linear-gradient(to bottom, transparent, black, transparent);
-    mask-image: linear-gradient(to bottom, transparent, black, transparent);
-}
-
-/* 添加混合模式支持 */
-.mix-blend-overlay {
-    mix-blend-mode: overlay;
-}
-</style>
 
 <style scoped>
 .router-link-active {

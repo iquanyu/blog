@@ -23,37 +23,11 @@ class UserSeeder extends Seeder
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
         ]);
-        $admin->assignRole('super-admin');
-
-        // 创建编辑
-        $this->command->info('创建编辑...');
-        $editors = User::factory(3)->create();
-        foreach ($editors as $editor) {
-            $editor->assignRole('editor');
-        }
-
-        // 创建作者
-        $this->command->info('创建作者...');
-        $authors = User::factory(10)->create();
-        foreach ($authors as $author) {
-            $author->assignRole('author');
-        }
 
         // 创建普通用户
         $this->command->info('创建普通用户...');
-        $users = User::factory(20)->create();
-        foreach ($users as $user) {
-            $user->assignRole('normal-user');
-        }
+        $users = User::factory(30)->create();
 
-        // 创建未验证用户
-        $this->command->info('创建未验证用户...');
-        $unverifiedUsers = User::factory(5)
-            ->unverified()
-            ->create();
-        foreach ($unverifiedUsers as $user) {
-            $user->assignRole('normal-user');
-        }
 
         $this->command->info('用户创建完成！');
     }
